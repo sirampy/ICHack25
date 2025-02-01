@@ -7,7 +7,7 @@
   <style>
     body {
       margin: 0;
-      overflow: hidden; /* Ensures the visualization fills the window */
+      overflow: hidden;
       background-color: #f4f4f4;
       font-family: Arial, sans-serif;
     }
@@ -25,23 +25,20 @@
   <!-- Load D3.js from a CDN -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script>
-    // Sample data with more users. Notice that some users (e.g., Alice) connect with multiple others.
+    // Sample data with additional properties for each user.
     const nodes = [
-      { id: "1", name: "Alice", img: "https://randomuser.me/api/portraits/women/1.jpg" },
-      { id: "2", name: "Bob", img: "https://randomuser.me/api/portraits/men/2.jpg" },
-      { id: "3", name: "Carol", img: "https://randomuser.me/api/portraits/women/3.jpg" },
-      { id: "4", name: "Dave", img: "https://randomuser.me/api/portraits/men/4.jpg" },
-      { id: "5", name: "Eve", img: "https://randomuser.me/api/portraits/women/5.jpg" },
-      { id: "6", name: "Frank", img: "https://randomuser.me/api/portraits/men/6.jpg" },
-      { id: "7", name: "Grace", img: "https://randomuser.me/api/portraits/women/7.jpg" },
-      { id: "8", name: "Henry", img: "https://randomuser.me/api/portraits/men/8.jpg" },
-      { id: "9", name: "Ivy", img: "https://randomuser.me/api/portraits/women/9.jpg" },
-      { id: "10", name: "Jack", img: "https://randomuser.me/api/portraits/men/10.jpg" }
+      { id: "1", name: "Alice", img: "https://randomuser.me/api/portraits/women/1.jpg", linkedin: "https://linkedin.com/in/alice", email: "alice@example.com" },
+      { id: "2", name: "Bob", img: "https://randomuser.me/api/portraits/men/2.jpg", linkedin: "https://linkedin.com/in/bob", email: "bob@example.com" },
+      { id: "3", name: "Carol", img: "https://randomuser.me/api/portraits/women/3.jpg", linkedin: "https://linkedin.com/in/carol", email: "carol@example.com" },
+      { id: "4", name: "Dave", img: "https://randomuser.me/api/portraits/men/4.jpg", linkedin: "https://linkedin.com/in/dave", email: "dave@example.com" },
+      { id: "5", name: "Eve", img: "https://randomuser.me/api/portraits/women/5.jpg", linkedin: "https://linkedin.com/in/eve", email: "eve@example.com" },
+      { id: "6", name: "Frank", img: "https://randomuser.me/api/portraits/men/6.jpg", linkedin: "https://linkedin.com/in/frank", email: "frank@example.com" },
+      { id: "7", name: "Grace", img: "https://randomuser.me/api/portraits/women/7.jpg", linkedin: "https://linkedin.com/in/grace", email: "grace@example.com" },
+      { id: "8", name: "Henry", img: "https://randomuser.me/api/portraits/men/8.jpg", linkedin: "https://linkedin.com/in/henry", email: "henry@example.com" },
+      { id: "9", name: "Ivy", img: "https://randomuser.me/api/portraits/women/9.jpg", linkedin: "https://linkedin.com/in/ivy", email: "ivy@example.com" },
+      { id: "10", name: "Jack", img: "https://randomuser.me/api/portraits/men/10.jpg", linkedin: "https://linkedin.com/in/jack", email: "jack@example.com" }
     ];
 
-    // Define connections between users.
-    // Here, Alice (id: "1") is connected to Bob, Carol, and Dave.
-    // Other users are also connected to multiple other users.
     const links = [
       { source: "1", target: "2" },
       { source: "1", target: "3" },
@@ -52,10 +49,9 @@
       { source: "4", target: "8" },
       { source: "5", target: "9" },
       { source: "5", target: "10" },
-      // Additional connections to illustrate multiple links per user:
+      // Additional connections:
       { source: "3", target: "9" },
-      { source: "7", target: "10" },
-      { source: "3", target: "5" }
+      { source: "7", target: "10" }
     ];
 
     // Set up the SVG dimensions to fill the viewport
@@ -78,7 +74,7 @@
     const simulation = d3.forceSimulation(nodes)
       .force("link", d3.forceLink(links)
         .id(d => d.id)
-        .distance(150) // Adjusts spacing between nodes
+        .distance(150)
       )
       .force("charge", d3.forceManyBody().strength(-300))
       .force("center", d3.forceCenter(width / 2, height / 2));
@@ -98,7 +94,12 @@
       .enter()
       .append("g")
       .attr("class", "node")
-      .call(drag(simulation));
+      .call(drag(simulation))
+      // Add a click event to redirect to the profile page
+      .on("click", (event, d) => {
+        window.location.href = `/frontend/profile.html?id=${d.id}`;
+
+      });
 
     // Append a circle as a border/background for each node
     node.append("circle")
