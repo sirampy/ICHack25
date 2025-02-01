@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connect Your NFC Card</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .button {
+            background-color: #007BFF;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            margin-top: 20px;
+        }
+        .button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        #status {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Connect Your NFC Card</h1>
+        <p>Tap your NFC card to connect it to your profile.</p>
+        <button id="connectBtn" class="button">Connect NFC Card</button>
+        <p id="status">Waiting for card...</p>
+    </div>
+
+    <script>
+        document.getElementById("connectBtn").addEventListener("click", async () => {
+            if ("NDEFReader" in window) {
+                try {
+                    const ndef = new NDEFReader();
+                    await ndef.scan();
+                    document.getElementById("status").textContent = "Scanning for NFC card...";
+                    
+                    ndef.addEventListener("reading", ({ serialNumber }) => {
+                        document.getElementById("status").textContent = `Card Connected! ID: ${serialNumber}`;
+                        
+                        // Redirect or handle profile setup
+                        setTimeout(() => {
+                            window.location.href = `/setup-profile?id=${serialNumber}`;
+                        }, 1500);
+                    });
+                } catch (error) {
+                    document.getElementById("status").textContent = "Error scanning NFC card. Try again.";
+                }
+            } else {
+                document.getElementById("status").textContent = "NFC not supported on this device.";
+            }
+        });
+    </script>
+</body>
+</html>
