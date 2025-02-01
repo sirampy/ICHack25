@@ -1,3 +1,4 @@
+use actix_files as fs;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 
 #[get("/")]
@@ -10,6 +11,7 @@ async fn echo(req_body: String) -> impl Responder {
     HttpResponse::Ok().body(req_body)
 }
 
+
 async fn manual_hello() -> impl Responder {
     HttpResponse::Ok().body("Hey there!")
 }
@@ -21,6 +23,7 @@ async fn main() -> std::io::Result<()> {
             .service(hello)
             .service(echo)
             .route("/hey", web::get().to(manual_hello))
+            .service(fs::Files::new("/static", "static/").show_files_listing())
     })
     .bind(("127.0.0.1", 8080))?
     .run()
