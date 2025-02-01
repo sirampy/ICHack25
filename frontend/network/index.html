@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Networking Connections</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden; /* Ensures the visualization fills the window */
+      background-color: #f4f4f4;
+      font-family: Arial, sans-serif;
+    }
+    /* Styling for text labels */
+    text {
+      font-size: 12px;
+      fill: #333;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <svg id="network"></svg>
+
+  <!-- Load D3.js from a CDN -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script>
+    // Sample data with more users. Notice that some users (e.g., Alice) connect with multiple others.
+    const nodes = [
+      { id: "1", name: "Alice", img: "https://randomuser.me/api/portraits/women/1.jpg" },
+      { id: "2", name: "Bob", img: "https://randomuser.me/api/portraits/men/2.jpg" },
+      { id: "3", name: "Carol", img: "https://randomuser.me/api/portraits/women/3.jpg" },
+      { id: "4", name: "Dave", img: "https://randomuser.me/api/portraits/men/4.jpg" },
+      { id: "5", name: "Eve", img: "https://randomuser.me/api/portraits/women/5.jpg" },
+      { id: "6", name: "Frank", img: "https://randomuser.me/api/portraits/men/6.jpg" },
+      { id: "7", name: "Grace", img: "https://randomuser.me/api/portraits/women/7.jpg" },
+      { id: "8", name: "Henry", img: "https://randomuser.me/api/portraits/men/8.jpg" },
+      { id: "9", name: "Ivy", img: "https://randomuser.me/api/portraits/women/9.jpg" },
+      { id: "10", name: "Jack", img: "https://randomuser.me/api/portraits/men/10.jpg" }
+    ];
+
+    // Define connections between users.
+    // Here, Alice (id: "1") is connected to Bob, Carol, and Dave.
+    // Other users are also connected to multiple other users.
+    const links = [
+      { source: "1", target: "2" },
+      { source: "1", target: "3" },
+      { source: "1", target: "4" },
+      { source: "2", target: "5" },
+      { source: "3", target: "6" },
+      { source: "4", target: "7" },
+      { source: "4", target: "8" },
+      { source: "5", target: "9" },
+      { source: "5", target: "10" },
+      // Additional connections to illustrate multiple links per user:
+      { source: "3", target: "9" },
+      { source: "7", target: "10" },
+      { source: "3", target: "5" }
+    ];
+
+    // Set up the SVG dimensions to fill the viewport
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    const svg = d3.select("#network")
+      .attr("width", width)
+      .attr("height", height);
+
+    // Define a clipPath with the circle centered at (0,0)
+    svg.append("defs")
+      .append("clipPath")
+      .attr("id", "clip-circle")
+      .append("circle")
+      .attr("cx", 0)
+      .attr("cy", 0)
+      .attr("r", 30);
+
+    // Set up the force simulation with nodes and links
+    const simulation = d3.forceSimulation(nodes)
+      .force("link", d3.forceLink(links)
+        .id(d => d.id)
+        .distance(150) // Adjusts spacing between nodes
+      )
+      .force("charge", d3.forceManyBody().strength(-300))
+      .force("center", d3.forceCenter(width / 2, height / 2));
+
+    // Draw the links (lines connecting nodes)
+    const link = svg.append("g")
+      .attr("stroke", "#aaa")
+      .attr("stroke-width", 2)
+      .selectAll("line")
+      .data(links)
+      .enter()
+      .append("line");
+
+    // Draw the nodes
+    const node = svg.selectAll(".node")
+      .data(nodes)
+      .enter()
+      .append("g")
+      .attr("class", "node")
+      .call(drag(simulation));
+
+    // Append a circle as a border/background for each node
+    node.append("circle")
+      .attr("r", 30)
+      .attr("fill", "white")
+      .attr("stroke", "#007BFF")
+      .attr("stroke-width", 3);
+
+    // Append the profile images (centered and clipped to a circle)
+    node.append("image")
+      .attr("xlink:href", d => d.img)
+      .attr("x", -30)
+      .attr("y", -30)
+      .attr("width", 60)
+      .attr("height", 60)
+      .attr("clip-path", "url(#clip-circle)");
+
+    // Add text labels (the user's name) under each node
+    node.append("text")
+      .attr("dy", 45)
+      .attr("text-anchor", "middle")
+      .text(d => d.name);
+
+    // Update positions on each simulation tick
+    simulation.on("tick", () => {
+      link
+        .attr("x1", d => d.source.x)
+        .attr("y1", d => d.source.y)
+        .attr("x2", d => d.target.x)
+        .attr("y2", d => d.target.y);
+
+      node.attr("transform", d => `translate(${d.x},${d.y})`);
+    });
+
+    // Drag functions to allow users to reposition nodes manually
+    function drag(simulation) {
+      function dragstarted(event, d) {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+      }
+      function dragged(event, d) {
+        d.fx = event.x;
+        d.fy = event.y;
+      }
+      function dragended(event, d) {
+        if (!event.active) simulation.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+      }
+      return d3.drag()
+        .on("start", dragstarted)
+        .on("drag", dragged)
+        .on("end", dragended);
+    }
+  </script>
+</body>
+</html>
