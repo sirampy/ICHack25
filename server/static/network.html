@@ -106,7 +106,7 @@
     let links = [];
 
     // ------------------------------
-    // Fetch Data from API and Preload Images
+    // Fetch Data from Rust API and Preload Images
     // ------------------------------
     function fetchNetworkData(apiUrl) {
       return fetch(apiUrl)
@@ -117,10 +117,28 @@
           return response.json();
         })
         .then(data => {
-          // Assume API returns { nodes: [...], links: [...] }
-          nodes = data.nodes;
-          links = data.links;
-          // Preload each node's image using fetch and convert to an object URL.
+          // Your API returns an object with "edges" and "people".
+          // Convert edges to our links format:
+          // We'll use the field "ts" as the time.
+          links = data.edges.map(edge => ({
+            source: edge.from.toString(),
+            target: edge.to.toString(),
+            time: edge.ts  // already in ISO format (with a "Z" suffix)
+          }));
+          // Convert people to our nodes array.
+          // The API returns an array of [id, profile] pairs.
+          nodes = data.people.map(pair => {
+            const [id, profile] = pair;
+            return {
+              id: id.toString(),
+              name: profile.name,
+              // Use profile.pfp if available; otherwise, a default image URL.
+              img: profile.pfp !== "" ? profile.pfp : "https://via.placeholder.com/60",
+              linkedin: profile.linkedin,
+              email: profile.email
+            };
+          });
+          // Preload images for each node.
           return Promise.all(nodes.map(node =>
             fetch(node.img)
               .then(resp => {
@@ -135,25 +153,24 @@
               })
               .catch(err => {
                 console.error("Error loading image for node", node.id, err);
-                // Fallback: keep the original URL.
+                // Fallback: leave node.img as is.
                 return node;
               })
           ));
         });
     }
 
-    // Call the API – replace with your actual API endpoint.
-    // For example: "https://api.example.com/network"
-    fetchNetworkData("https://api.example.com/network")
+    // Call the API – use your Rust API endpoint.
+    fetchNetworkData("http://127.0.0.1:8080/api/graphData")
       .then(() => {
-        // Once data is loaded and images are preloaded, initialize the simulation.
+        // Once data and images are loaded, initialize the simulation.
         initSimulation();
-        // Optionally, set the default manual time input to the latest link time.
+        // Set the default manual time input to the latest link time.
         const latestEdgeTime = new Date(Math.max(...links.map(link => new Date(link.time))));
-        document.getElementById("networkTime").value = latestEdgeTime.toISOString().slice(0,16);
-        // Also, set default values for playback controls:
+        document.getElementById("networkTime").value = latestEdgeTime.toISOString().slice(0, 16);
+        // Set default playback values: start time is the time of the first edge, end time is the latest edge time.
         document.getElementById("startTime").value = links[0].time;
-        document.getElementById("endTime").value = latestEdgeTime.toISOString().slice(0,16);
+        document.getElementById("endTime").value = latestEdgeTime.toISOString().slice(0, 16);
       })
       .catch(err => {
         console.error("Error fetching network data:", err);
@@ -171,10 +188,10 @@
         .attr("width", width)
         .attr("height", height);
 
-      // Append a container group for pan/zoom
+      // Append container for pan/zoom
       const container = svg.append("g");
 
-      // Define a clipPath for circular images
+      // Define clipPath for circular images.
       svg.append("defs")
         .append("clipPath")
         .attr("id", "clip-circle")
@@ -183,7 +200,7 @@
         .attr("cy", 0)
         .attr("r", 30);
 
-      // Set up zoom and pan behavior
+      // Set up zoom/pan behavior.
       const zoom = d3.zoom()
         .scaleExtent([0.1, 10])
         .on("zoom", (event) => {
@@ -191,26 +208,25 @@
         });
       svg.call(zoom);
 
-      // Initialize force simulation
+      // Initialize the force simulation.
       simulation = d3.forceSimulation(nodes)
         .force("link", d3.forceLink(links)
           .id(d => d.id)
-          .distance(150)
-        )
+          .distance(150))
         .force("charge", d3.forceManyBody().strength(-300))
         .force("center", d3.forceCenter(width / 2, height / 2));
 
-      // Create link group
+      // Create link group.
       linkGroup = container.append("g")
         .attr("stroke", "#aaa")
         .attr("stroke-width", 2);
-      // Bind links initially
+      // Bind links initially.
       linkSelection = linkGroup.selectAll("line")
         .data(links)
         .enter()
         .append("line");
 
-      // Create node group
+      // Create node group.
       nodeSelection = container.selectAll(".node")
         .data(nodes)
         .enter()
@@ -221,14 +237,14 @@
           window.location.href = `./profile.html?id=${d.id}`;
         });
 
-      // Append node circles
+      // Append node circles.
       nodeSelection.append("circle")
         .attr("r", 30)
         .attr("fill", "white")
         .attr("stroke", "#007BFF")
         .attr("stroke-width", 3);
 
-      // Append node images
+      // Append node images.
       nodeSelection.append("image")
         .attr("xlink:href", d => d.img)
         .attr("x", -30)
@@ -237,13 +253,13 @@
         .attr("height", 60)
         .attr("clip-path", "url(#clip-circle)");
 
-      // Append node labels
+      // Append node labels.
       nodeSelection.append("text")
         .attr("dy", 45)
         .attr("text-anchor", "middle")
         .text(d => d.name);
 
-      // Update simulation on each tick
+      // Update simulation on each tick.
       simulation.on("tick", () => {
         linkGroup.selectAll("line")
           .attr("x1", d => d.source.x)
@@ -278,7 +294,7 @@
     // ------------------------------
     // Time-Filtering Functionality
     // ------------------------------
-    // This function filters the links based on the provided Date object.
+    // This function filters the links based on the provided Date.
     function updateNetworkForTime(simTime) {
       console.log("Updating network for time:", simTime);
       const filteredLinks = links.filter(link => new Date(link.time) <= simTime);
@@ -290,12 +306,12 @@
       linkSelection.enter().append("line")
         .attr("stroke", "#aaa")
         .attr("stroke-width", 2);
-      // For a smoother transition, use a lower alpha target.
+      // Use a lower alpha target for smoother transitions.
       simulation.alphaTarget(0.3).restart();
     }
 
     // ------------------------------
-    // Manual Mode: Listen to changes on the manual datetime-local input
+    // Manual Mode: Listen for changes on the manual datetime-local input
     // ------------------------------
     const manualTimeInput = document.getElementById("networkTime");
     manualTimeInput.addEventListener("input", () => {
@@ -316,7 +332,6 @@
 
     let playbackTimer = null;
 
-    // Set default playback values (you can adjust these as needed)
     startTimeInput.value = "2025-02-02T00:10:00";
     endTimeInput.value = "2025-02-02T04:00:00";
 
