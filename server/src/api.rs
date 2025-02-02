@@ -5,6 +5,8 @@ use std::sync::RwLock;
 use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 use std::fs;
+use chrono::{DateTime, Local};
+use serde_json::Value;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Profile {
@@ -154,19 +156,32 @@ async fn upload_edges(mut payload: MultipartForm<RegistrationPayload>) -> impl R
 struct testForm {
     #[multipart(limit = "100MB")]
     file: TempFile,
-    text: MpText<String>,
-    surname: MpText<String>,
-    cardId: MpText<String>,
+    name: MpText<String>,
+    scan: MpText<String>,
     linkedin: MpText<String>,
     email: MpText<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct ScanData {
+    myid: u8,
+    scans: Vec<Vec<u64>>,
 }
 
 #[post("/uploadTest")]
 async fn uploadTest(mut payload: MultipartForm<testForm>) -> impl Responder {
     // iterate over multipart stream
+    
+    let sd: ScanData = serde_json::from_str(&payload.scan).unwrap();
+    
+    
+    // DO STUFF WITH THIS
+    
     fs::copy(payload.file.file.path(),"./idk");
      format!(
-        "Uploaded text {} , with size: {}",
-        payload.text.clone(), payload.file.size
+        "Uploaded text {} ,  size: {}",
+        payload.name.clone(), payload.file.size
     )
+
+
 }
