@@ -76,13 +76,14 @@ impl ApiState {
 
         // p0scans
         let mut p0scans = HashMap::new();
-
+        p0scans.insert(4 as u64, Local::now() - Duration::minutes(10));
         state.graph.insert(0 as u64, p0scans);
 
         // p0scans
         let mut p1scans = HashMap::new();
-        p1scans.insert(3 as u64, Local::now());
-        p1scans.insert(2 as u64, Local::now());
+        p1scans.insert(4 as u64, Local::now() - Duration::minutes(25));
+        p1scans.insert(3 as u64, Local::now() - Duration::minutes(10));
+        p1scans.insert(2 as u64, Local::now() - Duration::minutes(20));
         state.graph.insert(1 as u64, p1scans);
 
         // p0scans
@@ -91,6 +92,7 @@ impl ApiState {
 
         // p0scans
         let mut p3scans = HashMap::new();
+        p3scans.insert(4 as u64, Local::now() - Duration::minutes(5));
         state.graph.insert(3 as u64, p3scans);
 
         // p0scans

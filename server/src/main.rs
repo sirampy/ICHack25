@@ -53,7 +53,7 @@ async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "debug");
     env_logger::init();
 
-    let data = web::Data::new(RwLock::new(api::ApiState::default()));
+    let data = web::Data::new(RwLock::new(api::ApiState::fakedata()));
 
     HttpServer::new(move || {
         App::new()
