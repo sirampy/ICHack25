@@ -82,7 +82,7 @@
           // If an image URL is provided, use it; otherwise, use a default image.
           // (If your API returns a valid image URL, you could also preload it.)
           document.getElementById("profileImg").src = user.pfp !== "" ? user.pfp : "https://via.placeholder.com/150";
-          document.getElementById("profileName").textContent = user.name;
+          document.getElementById("profileName").textContent = user.firstname + ' ' + user.lastname;
           document.getElementById("linkedinLink").href = user.linkedin;
           document.getElementById("email").textContent = user.email;
         } else {

@@ -10,7 +10,8 @@ use serde_json::Value;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Profile {
-    pub name: String,
+    pub firstname: String,
+    pub lastname: String,
     pub pfp: String,
     pub linkedin: String,
     pub email: String,
@@ -29,11 +30,11 @@ impl ApiState{
             people: HashMap::new(),
         };
 
-        let p0: Profile = Profile {name: "Person 0".to_owned(), pfp: "".to_owned(), linkedin:"".to_owned(), email: "".to_owned()};
-        let p1: Profile = Profile {name: "Person 1".to_owned(), pfp: "".to_owned(), linkedin:"".to_owned(), email: "".to_owned()};
-        let p2: Profile = Profile {name: "Person 2".to_owned(), pfp: "".to_owned(), linkedin:"".to_owned(), email: "".to_owned()};
-        let p3: Profile = Profile {name: "Person 3".to_owned(), pfp: "".to_owned(), linkedin:"".to_owned(), email: "".to_owned()};
-        let p4: Profile = Profile {name: "Person 4".to_owned(), pfp: "".to_owned(), linkedin:"".to_owned(), email: "".to_owned()};
+        let p0: Profile = Profile {firstname: "Person 0".to_owned(), lastname: "L0".to_owned(), pfp: "".to_owned(), linkedin:"".to_owned(), email: "".to_owned()};
+        let p1: Profile = Profile {firstname: "Person 1".to_owned(), lastname: "L1".to_owned(), pfp: "".to_owned(), linkedin:"".to_owned(), email: "".to_owned()};
+        let p2: Profile = Profile {firstname: "Person 2".to_owned(), lastname: "L2".to_owned(), pfp: "".to_owned(), linkedin:"".to_owned(), email: "".to_owned()};
+        let p3: Profile = Profile {firstname: "Person 3".to_owned(), lastname: "L3".to_owned(), pfp: "".to_owned(), linkedin:"".to_owned(), email: "".to_owned()};
+        let p4: Profile = Profile {firstname: "Person 4".to_owned(), lastname: "L4".to_owned(), pfp: "".to_owned(), linkedin:"".to_owned(), email: "".to_owned()};
 
         state.people.insert(0, p0);
         state.people.insert(1, p1);

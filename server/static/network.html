@@ -131,7 +131,7 @@
             const [id, profile] = pair;
             return {
               id: id.toString(),
-              name: profile.name,
+              name: profile.firstname,
               // Use profile.pfp if available; otherwise, a default image URL.
               img: profile.pfp !== "" ? profile.pfp : "https://via.placeholder.com/60",
               linkedin: profile.linkedin,
