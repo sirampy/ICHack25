@@ -16,10 +16,7 @@ async fn manual_hello() -> impl Responder {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
 
-    let data = web::Data::new(RwLock::new(api::ApiState {
-                    test: 0,
-                    last: "hello".to_string(),
-                })); 
+    let data = web::Data::new(RwLock::new(api::ApiState::default())); 
         
     HttpServer::new(move || {
         App::new()
