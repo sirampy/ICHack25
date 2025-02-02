@@ -21,21 +21,6 @@ async fn index_get(req: HttpRequest) -> impl Responder {
     }
 }
 
-#[derive(Template)]
-#[template(path = "home.html")]
-struct Home_template {}
-
-async fn home_get() -> impl Responder {
-    Home_template {}
-}
-
-#[derive(Template)]
-#[template(path = "collector.html")]
-struct Collector_template {}
-
-async fn collector_get() -> impl Responder {
-    Collector_template {}
-}
 
 #[derive(Template)]
 #[template(path = "register.html")]
@@ -71,9 +56,7 @@ async fn main() -> std::io::Result<()> {
             )
             .service(echo)
             .route("/", web::get().to(index_get))
-            .route("/home", web::get().to(home_get))
             .route("/register", web::get().to(register_get))
-            .route("/collector", web::get().to(collector_get))
             .service(fs::Files::new("/static", "static/").show_files_listing())
     })
     .bind(("127.0.0.1", 8080))?
