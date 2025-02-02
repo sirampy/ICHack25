@@ -31,7 +31,7 @@ impl ApiState {
                         if *old_ts > *ts {*old_ts = *ts};
                     }
                     | None => {
-                        m.insert(hgr, ts);
+                        m.insert(*hgr, *ts);
                     }
                     }
                 }
