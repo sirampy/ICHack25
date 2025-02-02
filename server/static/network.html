@@ -75,7 +75,6 @@
       { id: "13", name: "Petr", img: "/images/petr.jpeg", linkedin: "https://linkedin.com/in/ivy", email: "ivy@example.com" },
       { id: "14", name: "Quentin", img: "/images/quentin.jpeg", linkedin: "https://linkedin.com/in/ivy", email: "ivy@example.com" },
       { id: "15", name: "Rahul", img: "/images/rahul.jpeg", linkedin: "https://linkedin.com/in/ivy", email: "ivy@example.com" }
-      
     ];
 
     const links = [
@@ -91,11 +90,10 @@
       // Additional connections:
       { source: "3", target: "9" },
       { source: "7", target: "10" },
-      //Personal connecitons
+      // Personal connections
       { source: "12", target: "7" },
       { source: "13", target: "1" },
       { source: "14", target: "10" },
-
       { source: "11", target: "12" },
       { source: "11", target: "13" },
       { source: "11", target: "14" },
@@ -115,6 +113,10 @@
       .attr("width", width)
       .attr("height", height);
 
+    // Append a group container that will hold all network elements
+    // This group will be zoomed and panned
+    const container = svg.append("g");
+
     // Define a clipPath with the circle centered at (0,0)
     svg.append("defs")
       .append("clipPath")
@@ -123,6 +125,15 @@
       .attr("cx", 0)
       .attr("cy", 0)
       .attr("r", 30);
+
+    // Set up zoom and pan behavior
+    const zoom = d3.zoom()
+      .scaleExtent([0.1, 10])
+      .on("zoom", (event) => {
+        container.attr("transform", event.transform);
+      });
+
+    svg.call(zoom);
 
     // Set up the force simulation with nodes and links
     const simulation = d3.forceSimulation(nodes)
@@ -133,8 +144,8 @@
       .force("charge", d3.forceManyBody().strength(-300))
       .force("center", d3.forceCenter(width / 2, height / 2));
 
-    // Draw the links (lines connecting nodes)
-    const link = svg.append("g")
+    // Draw the links (lines connecting nodes) inside the container group
+    const link = container.append("g")
       .attr("stroke", "#aaa")
       .attr("stroke-width", 2)
       .selectAll("line")
@@ -142,8 +153,8 @@
       .enter()
       .append("line");
 
-    // Draw the nodes
-    const node = svg.selectAll(".node")
+    // Draw the nodes inside the container group
+    const node = container.selectAll(".node")
       .data(nodes)
       .enter()
       .append("g")
