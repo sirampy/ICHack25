@@ -1,124 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Setup Your Profile</title>
 
-{% extends "base.html" %}
-
-{% block title %}Register{% endblock %}
-
-{% block head %}
-{% endblock %}
-
-{% block content %}
-
-    
-
-<h1>Register</h1>
-
-    <form action="/api/upload" method="post">
-    
-    <label for="name">Name:</label><br>
-    <input type="text" id="name" name="name" required><br><br>
-    
-
-    <label for="username">Username:</label><br>
-    <input type="text" id="username" name="username" required><br><br>
-
-    <label for="email">Email:</label><br>
-    <input type="email" id="email" name="email" required><br><br>
-
-    <label for="linkedin">Linkedin:</label><br>
-    <input type="text" id="linkedin" name="linkedin"><br><br>
-
-    <label for="linkedin">Profile Image:</label><br>
-    <input type="file" id="pfp" name="pfp">
-  
-    <div style="border: 1px solid black; padding: 10px;">
-    <p>Collect data from reader:</p>
-    <button type="button" id="connectButton">Connect</button>
-    <div id="output"></div>
-
-    <input type="text" id="scan" name="scan" style="pointer-events:none;background:lightgray;" required><br><br>
-    </div>
-    <button type="submit">Register</button>
-</form>
-
-
-<script>
-    const connectButton = document.getElementById('connectButton');
-    const outputDiv = document.getElementById('output');
-    const scanin = document.getElementById('scan');
-
-    let port;
-    let writer;
-    let reader;
-    
-    const filters = [
-      { usbVendorId: 0x2e8a, usbProductId: 0x000a },
-    ];
-    
-    connectButton.addEventListener('click', async () => {
-        if (!port) {
-          try {
-            port = await navigator.serial.requestPort({ filters });
-            await port.open({ baudRate: 115200 }); // Adjust baudRate if needed
-    
-            writer = port.writable.getWriter();
-            reader = port.readable.getReader();
-            
-            // outputDiv.innerHTML += '<p>Connected to Serial Port</p>';
-            
-            sendCharAndReadLine(); // Call the function to send and read
-            
-          } catch (error) {
-             outputDiv.innerHTML += `<p>Error opening port: ${error}</p>`;
-          }
-        } else {
-          outputDiv.innerHTML += '<p>Port is already open.</p>';
-        }
-    });
-    
-    
-    
-    async function sendCharAndReadLine() {
-      try {
-        // 1. Send a single character (e.g., 'A')
-        const charToSend = 'R';
-        const data = new Uint8Array([charToSend.charCodeAt(0)]);
-        await writer.write(data);
-        
-    
-        let line = '';
-
-        let output = new Uint8Array();
-
-        while (true) {
-            const { value, done } = await reader.read();
-            const decoder = new TextDecoder();
-            const text = decoder.decode(value);
-            line+=text;
-            // console.log(value,done, text, line)
-            
-            if (done || line.slice(-1)== '}') {
-                // Allow the serial port to be closed later.
-                reader.releaseLock();
-                break;
-            }
-
-        }
-
-
-        console.log(line)
-
-        scanin.value = line
-        // SEND   
-        
-      } catch (error) {
-        outputDiv.innerHTML += `<p>Error during communication: ${error}</p>`;
-      } finally {
-         // release the reader and writer (optional, useful if you plan to send/read more later)
-          if (writer) {
-            writer.releaseLock();
-          }
-      }
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f4f4f4;
+      margin: 0;
     }
-    </script>
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+    input, label {
+      margin-bottom: 15px;
+      font-size: 16px;
+    }
+    input {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .button {
+      background-color: #007BFF;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Setup Your Profile</h1>
+    <form id="profileForm">
+      <input type="text" id="firstname" placeholder="First Name" required>
+      <input type="text" id="lastname" placeholder="Surname" required>
+      <input type="url" id="linkedin" placeholder="LinkedIn URL" required>
+      <input type="email" id="email" placeholder="Email" required>
 
-{% endblock %}
+      <div style="border: 1px solid black; padding: 10px;">
+        <p>Collect data from reader:</p>
+        <button type="button" id="connectButton">Connect</button>
+        <div id="output"></div>
+    
+        <input type="text" id="scan" name="scan" style="pointer-events:none;background:lightgray;" required><br><br>
+      </div>
+    
+
+
+      <!-- Label for the profile picture input -->
+      <label for="profilePicture">Upload your profile picture:</label>
+      <input type="file" id="profilePicture" accept="image/*" required>
+      <button type="submit" class="button">Submit</button>
+    </form>
+  </div>
+
+  <script>
+    // Extract the NFC card ID from the query string (e.g., ?id=SERIAL_NUMBER)
+    const params = new URLSearchParams(window.location.search);
+    const cardId = params.get('id');
+
+    // Get the form element
+    const form = document.getElementById('profileForm');
+
+    // Listen for the form submission event
+    form.addEventListener('submit', function(event) {
+      event.preventDefault(); // Prevent the default form submission
+
+      // Create a new FormData object and append text fields and cardId
+      const formData = new FormData();
+      formData.append('firstname', document.getElementById('firstname').value);
+      formData.append('lastname', document.getElementById('lastname').value);
+      formData.append('linkedin', document.getElementById('linkedin').value);
+      formData.append('email', document.getElementById('email').value);
+      formData.append('scan', document.getElementById('scan').value);
+
+      // Retrieve the file from the file input and process it
+      const fileInput = document.getElementById('profilePicture');
+      if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = new Image();
+          img.onload = function() {
+            // Create a canvas of size 128x128 pixels
+            const canvas = document.createElement('canvas');
+            canvas.width = 128;
+            canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            // Draw the image scaled to 128x128 (assuming the image is square)
+            ctx.drawImage(img, 0, 0, 128, 128);
+            // Convert the canvas content to a Blob (PNG format)
+            canvas.toBlob(function(blob) {
+              // Append the downscaled image blob to the FormData.
+              // The third argument specifies the filename.
+              formData.append('profilePicture', blob, 'profile.png');
+              // Now send the FormData to your API.
+              sendFormData(formData);
+            }, 'image/png');
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      } else {
+        // No file was provided, so send the form data as is.
+        sendFormData(formData);
+      }
+    });
+
+    // Function to send the FormData via a POST request
+    function sendFormData(data) {
+      fetch('/api/upload', {
+        method: 'POST',
+        body: data
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(data => {
+        alert('Profile setup successful!');
+        window.location.href = '/network.html'; // Redirect to your network page
+      })
+      .catch(error => {
+        console.error('Error setting up profile:', error);
+        alert('There was an error setting up your profile. Please try again.');
+      });
+    }
+  </script>
+    <script>
+      const connectButton = document.getElementById('connectButton');
+      const outputDiv = document.getElementById('output');
+      const scanin = document.getElementById('scan');
+  
+      let port;
+      let writer;
+      let reader;
+      
+      const filters = [
+        { usbVendorId: 0x2e8a, usbProductId: 0x000a },
+      ];
+      
+      connectButton.addEventListener('click', async () => {
+          if (!port) {
+            try {
+              port = await navigator.serial.requestPort({ filters });
+              await port.open({ baudRate: 115200 }); // Adjust baudRate if needed
+      
+              writer = port.writable.getWriter();
+              reader = port.readable.getReader();
+              
+              // outputDiv.innerHTML += '<p>Connected to Serial Port</p>';
+              
+              sendCharAndReadLine(); // Call the function to send and read
+              
+            } catch (error) {
+               outputDiv.innerHTML += `<p>Error opening port: ${error}</p>`;
+            }
+          } else {
+            outputDiv.innerHTML += '<p>Port is already open.</p>';
+          }
+      });
+      
+      
+      
+      async function sendCharAndReadLine() {
+        try {
+          // 1. Send a single character (e.g., 'A')
+          const charToSend = 'R';
+          const data = new Uint8Array([charToSend.charCodeAt(0)]);
+          await writer.write(data);
+          
+      
+          let line = '';
+  
+          let output = new Uint8Array();
+  
+          while (true) {
+              const { value, done } = await reader.read();
+              const decoder = new TextDecoder();
+              const text = decoder.decode(value);
+              line+=text;
+              // console.log(value,done, text, line)
+              
+              if (done || line.slice(-1)== '}') {
+                  // Allow the serial port to be closed later.
+                  reader.releaseLock();
+                  break;
+              }
+  
+          }
+  
+  
+          console.log(line)
+  
+          scanin.value = line
+          // SEND   
+          
+        } catch (error) {
+          outputDiv.innerHTML += `<p>Error during communication: ${error}</p>`;
+        } finally {
+           // release the reader and writer (optional, useful if you plan to send/read more later)
+            if (writer) {
+              writer.releaseLock();
+            }
+        }
+      }
+      </script>
+  
+</body>
+</html>

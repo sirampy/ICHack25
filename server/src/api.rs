@@ -139,27 +139,28 @@ async fn hello(state: web::Data<RwLock<ApiState>>) -> impl Responder {
     web::Json(s.get_graphData())
 }
 
-#[derive(Debug, MultipartForm)]
-struct RegistrationPayload {
-    #[multipart(limit = "10mb")]
-    profilePicture: TempFile,
-    firstName: MpText<String>,
-}
+// #[derive(Debug, MultipartForm)]
+// struct RegistrationPayload {
+//     #[multipart(limit = "10mb")]
+//     profilePicture: TempFile,
+//     firstName: MpText<String>,
+// }
 
-#[post("/upload")]
-async fn upload_edges(mut payload: MultipartForm<RegistrationPayload>) -> impl Responder {
-    fs::copy(payload.profilePicture.file.path(),"./idk");
-    HttpResponse::Ok().body(format!("size: {}, fname: {}",payload.profilePicture.size, payload.firstName.clone()))
-}
+// #[post("/upload")]
+// async fn upload_edges(mut payload: MultipartForm<RegistrationPayload>) -> impl Responder {
+//     fs::copy(payload.profilePicture.file.path(),"./idk");
+//     HttpResponse::Ok().body(format!("size: {}, fname: {}",payload.profilePicture.size, payload.firstname.clone()))
+// }
 
 #[derive(Debug, MultipartForm)]
-struct testForm {
+struct Form {
     #[multipart(limit = "100MB")]
-    file: TempFile,
-    name: MpText<String>,
-    scan: MpText<String>,
+    profilePicture: TempFile,
+    firstname: MpText<String>,
+    lastname:  MpText<String>,
     linkedin: MpText<String>,
     email: MpText<String>,
+    scan: MpText<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -168,20 +169,18 @@ struct ScanData {
     scans: Vec<Vec<u64>>,
 }
 
-#[post("/uploadTest")]
-async fn uploadTest(mut payload: MultipartForm<testForm>) -> impl Responder {
+#[post("/upload")]
+async fn upload(mut payload: MultipartForm<Form>) -> impl Responder {
     // iterate over multipart stream
     
     let sd: ScanData = serde_json::from_str(&payload.scan).unwrap();
-    
-    
+    println!("{:?}", payload.0);
+
+    println!("{:?}", sd);
     // DO STUFF WITH THIS
     
-    fs::copy(payload.file.file.path(),"./idk");
-     format!(
-        "Uploaded text {} ,  size: {}",
-        payload.name.clone(), payload.file.size
-    )
+    fs::copy(payload.profilePicture.file.path(),"./idk");
+    HttpResponse::Ok().body(format!("{{}}"))
 
 
 }
