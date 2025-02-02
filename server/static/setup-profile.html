@@ -30,12 +30,14 @@
       display: flex;
       flex-direction: column;
     }
+    input, label {
+      margin-bottom: 15px;
+      font-size: 16px;
+    }
     input {
       padding: 10px;
-      margin-bottom: 15px;
       border: 1px solid #ccc;
       border-radius: 5px;
-      font-size: 16px;
     }
     .button {
       background-color: #007BFF;
@@ -56,6 +58,9 @@
       <input type="text" id="surname" placeholder="Surname" required>
       <input type="url" id="linkedin" placeholder="LinkedIn URL" required>
       <input type="email" id="email" placeholder="Email" required>
+      <!-- Label for the profile picture input -->
+      <label for="profilePicture">Upload your profile picture:</label>
+      <input type="file" id="profilePicture" accept="image/*" required>
       <button type="submit" class="button">Submit</button>
     </form>
   </div>
@@ -72,29 +77,25 @@
     form.addEventListener('submit', function(event) {
       event.preventDefault(); // Prevent the default form submission
 
-      // Retrieve values from the form fields
-      const firstName = document.getElementById('firstName').value;
-      const surname = document.getElementById('surname').value;
-      const linkedin = document.getElementById('linkedin').value;
-      const email = document.getElementById('email').value;
+      // Create a new FormData object to send text fields and the file
+      const formData = new FormData();
+      formData.append('cardId', cardId);
+      formData.append('firstName', document.getElementById('firstName').value);
+      formData.append('surname', document.getElementById('surname').value);
+      formData.append('linkedin', document.getElementById('linkedin').value);
+      formData.append('email', document.getElementById('email').value);
 
-      // Combine the data into an object (include the NFC card ID if needed)
-      const profileData = {
-        cardId: cardId,
-        firstName: firstName,
-        surname: surname,
-        linkedin: linkedin,
-        email: email
-      };
+      // Retrieve the file from the file input
+      const fileInput = document.getElementById('profilePicture');
+      if (fileInput.files.length > 0) {
+        formData.append('profilePicture', fileInput.files[0]);
+      }
 
-      // Send the profile data to your API via a POST request.
+      // Send the form data to your API via a POST request.
       // Replace '/api/setup-profile' with your actual API endpoint.
       fetch('/api/setup-profile', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(profileData)
+        body: formData
       })
       .then(response => {
         if (!response.ok) {
