@@ -37,35 +37,35 @@ impl ApiState {
             lastname: "Olsan".to_owned(),
             pfp: "/static/petr.jpeg".to_owned(),
             linkedin: "https://www.linkedin.com/in/petr-olsan/".to_owned(),
-            email: "".to_owned(),
+            email: "pmo22@ic.ac.uk".to_owned(),
         };
         let p1: Profile = Profile {
             firstname: "Mateusz".to_owned(),
             lastname: "Pietrzkiewicz".to_owned(),
             pfp: "/static/matthew.jpeg".to_owned(),
             linkedin: "https://www.linkedin.com/in/mateusz-pietrzkiewicz-557a04254/".to_owned(),
-            email: "".to_owned(),
+            email: "mp1622@ic.ac.uk".to_owned(),
         };
         let p2: Profile = Profile {
             firstname: "Alex".to_owned(),
             lastname: "Charlton".to_owned(),
             pfp: "/static/alex.jpeg".to_owned(),
             linkedin: "https://www.linkedin.com/in/alexander-charlton-404186259/".to_owned(),
-            email: "".to_owned(),
+            email: "ac5522@ic.ac.uk".to_owned(),
         };
         let p3: Profile = Profile {
             firstname: "Quentin".to_owned(),
             lastname: "Duff".to_owned(),
             pfp: "/static/quentin.jpeg".to_owned(),
             linkedin: "https://www.linkedin.com/in/quentin-duff/".to_owned(),
-            email: "".to_owned(),
+            email: "qd122@ic.ac.uk".to_owned(),
         };
         let p4: Profile = Profile {
             firstname: "Rahul".to_owned(),
             lastname: "Ganish".to_owned(),
             pfp: "/static/rahul.jpeg".to_owned(),
             linkedin: "https://www.linkedin.com/in/rahul-ganesh-b9404b23b/".to_owned(),
-            email: "".to_owned(),
+            email: "rh144@ic.ac.uk".to_owned(),
         };
         // p5: Emily Johnson (female)
         let p5: Profile = Profile {
@@ -172,38 +172,38 @@ impl ApiState {
 
         // Person 5 connects to persons 8 and 9.
         let mut p5scans = HashMap::new();
-        p5scans.insert(6, Local::now() + Duration::minutes(5));
-        p5scans.insert(7, Local::now() + Duration::minutes(15));
+        p5scans.insert(6, Local::now() - Duration::minutes(5));
+        p5scans.insert(7, Local::now() - Duration::minutes(15));
         state.graph.insert(5, p5scans);
 
         // Person 6 connects to person 10.
         let mut p6scans = HashMap::new();
-        p6scans.insert(8, Local::now() + Duration::minutes(10));
+        p6scans.insert(8, Local::now() - Duration::minutes(10));
         state.graph.insert(6, p6scans);
 
         // Person 7 connects to person 11.
         let mut p7scans = HashMap::new();
-        p7scans.insert(8, Local::now() + Duration::minutes(10));
+        p7scans.insert(8, Local::now() - Duration::minutes(10));
         state.graph.insert(7, p7scans);
 
         // Person 8 connects to person 0.
         let mut p8scans = HashMap::new();
-        p8scans.insert(3, Local::now() + Duration::minutes(30));
+        p8scans.insert(3, Local::now() - Duration::minutes(30));
         state.graph.insert(8, p8scans);
 
         // Person 9 connects to person 2.
         let mut p9scans = HashMap::new();
-        p9scans.insert(2, Local::now() + Duration::minutes(40));
+        p9scans.insert(2, Local::now() - Duration::minutes(40));
         state.graph.insert(9, p9scans);
 
         // Person 10 connects to person 4.
         let mut p10scans = HashMap::new();
-        p10scans.insert(4, Local::now() + Duration::minutes(20));
+        p10scans.insert(4, Local::now() - Duration::minutes(20));
         state.graph.insert(10, p10scans);
 
         // Person 11 connects to person 3.
         let mut p11scans = HashMap::new();
-        p11scans.insert(3, Local::now()+ Duration::minutes(30));
+        p11scans.insert(3, Local::now() - Duration::minutes(30));
         state.graph.insert(11, p11scans);
 
         state
