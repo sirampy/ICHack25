@@ -27,6 +27,9 @@
     <label for="linkedin">Linkedin:</label><br>
     <input type="text" id="linkedin" name="linkedin"><br><br>
 
+    <label for="linkedin">Profile Image:</label><br>
+    <input type="file" id="pfp" name="pfp">
+  
     <div style="border: 1px solid black; padding: 10px;">
     <p>Collect data from reader:</p>
     <button type="button" id="connectButton">Connect</button>
@@ -83,27 +86,34 @@
         
     
         let line = '';
-        const { value, done } = await reader.read();
-        // console.log(value);
-        const decoder = new TextDecoder();
-        const text = decoder.decode(value);
-        // outputDiv.innerHTML += '<p>recieved '+text+'</p>';
-    
-        console.log(text)
 
-        scanin.value = text
-        // SEND
-    
-    
-          
+        let output = new Uint8Array();
+
+        while (true) {
+            const { value, done } = await reader.read();
+            const decoder = new TextDecoder();
+            const text = decoder.decode(value);
+            line+=text;
+            // console.log(value,done, text, line)
+            
+            if (done || line.slice(-1)== '}') {
+                // Allow the serial port to be closed later.
+                reader.releaseLock();
+                break;
+            }
+
+        }
+
+
+        console.log(line)
+
+        scanin.value = line
+        // SEND   
         
       } catch (error) {
         outputDiv.innerHTML += `<p>Error during communication: ${error}</p>`;
       } finally {
          // release the reader and writer (optional, useful if you plan to send/read more later)
-          if (reader) {
-              reader.releaseLock();
-          }
           if (writer) {
             writer.releaseLock();
           }
