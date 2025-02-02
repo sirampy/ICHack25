@@ -58,6 +58,7 @@ async function sendCharAndReadLine() {
     // console.log(value);
     const decoder = new TextDecoder();
     const text = decoder.decode(value);
+    outputDiv.innerHTML += '<p>recieved '+text+'</p>';
 
     console.log(text)
 
