@@ -69,8 +69,6 @@ impl ApiState{
     }
 }
 
-
-
 #[derive(Serialize)]
 struct edge {
     from: u64,
@@ -140,19 +138,6 @@ async fn hello(state: web::Data<RwLock<ApiState>>) -> impl Responder {
     web::Json(s.get_graphData())
 }
 
-// #[derive(Debug, MultipartForm)]
-// struct RegistrationPayload {
-//     #[multipart(limit = "10mb")]
-//     profilePicture: TempFile,
-//     firstName: MpText<String>,
-// }
-
-// #[post("/upload")]
-// async fn upload_edges(mut payload: MultipartForm<RegistrationPayload>) -> impl Responder {
-//     fs::copy(payload.profilePicture.file.path(),"./idk");
-//     HttpResponse::Ok().body(format!("size: {}, fname: {}",payload.profilePicture.size, payload.firstname.clone()))
-// }
-
 #[derive(Debug, MultipartForm)]
 struct Form {
     #[multipart(limit = "100MB")]
@@ -171,15 +156,33 @@ struct ScanData {
 }
 
 #[post("/upload")]
-async fn upload(mut payload: MultipartForm<Form>) -> impl Responder {
+async fn upload(state: web::Data<RwLock<ApiState>>, mut payload: MultipartForm<Form>) -> impl Responder {
     // iterate over multipart stream
-    
     let sd: ScanData = serde_json::from_str(&payload.scan).unwrap();
+    let s = state.write().unwrap();
+    let pfpPath = format!("./static/pfp/{}",sd.myid);
+    let &mut newProfile = Profile {
+        firstname: payload.firstname.clone(),
+        lastname: payload.lastname.clone(),
+        linkedin: payload.linkedin.clone(),
+        email: payload.email.clone(),
+        pfp: pfpPath,
+    };
+    
     println!("{:?}", payload.0);
 
     println!("{:?}", sd);
     // DO STUFF WITH THIS
+
+    match s.people.get_mut(sd.myid.as_u64()) {
+        | Some(old) => {
+            old = newProfile;
+        }
+        | None => {
+            s.people.insert(sd.myid.as_u64(), *newProfile);
+        }
+    }
     
-    fs::copy(payload.profilePicture.file.path(),format!("./static/pfp/{}",sd.myid));
+    fs::copy(payload.profilePicture.file.path(),pfpPath);
     HttpResponse::Ok().body(format!("{{}}"))
 }
