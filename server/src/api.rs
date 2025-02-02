@@ -179,8 +179,6 @@ async fn upload(mut payload: MultipartForm<Form>) -> impl Responder {
     println!("{:?}", sd);
     // DO STUFF WITH THIS
     
-    fs::copy(payload.profilePicture.file.path(),"./idk");
+    fs::copy(payload.profilePicture.file.path(),format!("./static/pfp/{}",sd.myid));
     HttpResponse::Ok().body(format!("{{}}"))
-
-
 }
