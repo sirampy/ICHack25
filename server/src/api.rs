@@ -1,12 +1,12 @@
-use actix_web::{cookie::time::Date, get, post, web, App, HttpResponse, HttpServer, Responder};
-use chrono::{DateTime, Local, Utc};
-use serde_json::Value;
+use actix_web::{get,  post, web, App, HttpResponse, HttpServer, Responder};
+use actix_multipart::form::{json::Json as MpJson, tempfile::TempFile, MultipartForm, text::Text as MpText};
+use actix_multipart::Multipart;
 use std::sync::RwLock;
 use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
-use std::iter;
+use std::fs;
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Profile {
     pub name: String,
     pub pfp: String,
@@ -137,39 +137,36 @@ async fn hello(state: web::Data<RwLock<ApiState>>) -> impl Responder {
     web::Json(s.get_graphData())
 }
 
-
-
-#[derive(Deserialize, Debug)]
-struct RegistrationData {
-    name: String,
-    username: String,
-    email: String,
-    linkedin: String,
-    scan: String,
+#[derive(Debug, MultipartForm)]
+struct RegistrationPayload {
+    #[multipart(limit = "10mb")]
+    profilePicture: TempFile,
+    firstName: MpText<String>,
 }
-
-#[derive(Serialize, Deserialize, Debug)]
-struct ScanData {
-    myid: u8,
-    scans: Vec<Vec<u64>>,
-}
-
 
 #[post("/upload")]
-async fn upload_edges(form: web::Form<RegistrationData>, state: web::Data<RwLock<ApiState>>) -> impl Responder {
-
-    let data = form.into_inner();
-    println!("Received registration data: {:?}", data);
-
-    let sd: ScanData = serde_json::from_str(&data.scan).unwrap();
-
-    println!("{:?}", sd); //TODO use this MF
-
-    let mut s = state.write().unwrap();
-
-    
-
-
-    HttpResponse::Ok().body("Hello world!")
+async fn upload_edges(mut payload: MultipartForm<RegistrationPayload>) -> impl Responder {
+    fs::copy(payload.profilePicture.file.path(),"./idk");
+    HttpResponse::Ok().body(format!("size: {}, fname: {}",payload.profilePicture.size, payload.firstName.clone()))
 }
 
+#[derive(Debug, MultipartForm)]
+struct testForm {
+    #[multipart(limit = "100MB")]
+    file: TempFile,
+    text: MpText<String>,
+    surname: MpText<String>,
+    cardId: MpText<String>,
+    linkedin: MpText<String>,
+    email: MpText<String>,
+}
+
+#[post("/uploadTest")]
+async fn uploadTest(mut payload: MultipartForm<testForm>) -> impl Responder {
+    // iterate over multipart stream
+    fs::copy(payload.file.file.path(),"./idk");
+     format!(
+        "Uploaded text {} , with size: {}",
+        payload.text.clone(), payload.file.size
+    )
+}
