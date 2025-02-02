@@ -11,7 +11,6 @@ async fn echo(req_body: String) -> impl Responder {
 }
 
 
-
 async fn index_get(req: HttpRequest) -> impl Responder {
 
     match req.cookie("username"){
@@ -20,6 +19,16 @@ async fn index_get(req: HttpRequest) -> impl Responder {
     } 
      
 }
+
+#[derive(Template)]
+#[template(path = "home.html")] 
+struct Home_template {}
+
+
+async fn home_get() -> impl Responder {
+    Home_template {}
+}
+
 
 #[derive(Template)]
 #[template(path = "collector.html")] 
@@ -80,7 +89,7 @@ async fn main() -> std::io::Result<()> {
                 )
             .service(echo)
             .route("/", web::get().to(index_get))
-            .route("/home", web::get().to(index_get))
+            .route("/home", web::get().to(home_get))
             .route("/register", web::get().to(register_get))
             .route("/register", web::post().to(register_post))
             .route("/collector", web::get().to(collector_get))
