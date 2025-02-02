@@ -1,8 +1,10 @@
 use actix_web::{get,  post, web, App, HttpResponse, HttpServer, Responder};
 use std::sync::RwLock;
 use std::collections::HashMap;
-use serde::Deserialize;
+use serde::{Serialize, Deserialize};
+use std::iter;
 
+#[derive(Serialize, Clone)]
 pub struct Profile {
     pub fname: String,
     pub sname: String,
@@ -18,8 +20,21 @@ pub struct ApiState {
     pub people: HashMap<u64, Profile>,
 }
 
+#[derive(Serialize)]
+struct edge {
+    from: u64,
+    to: u64,
+    ts: u64,
+}
+
+#[derive(Serialize)]
+struct GraphDataPacket {
+    edges: Vec<edge>,
+    people: Vec<(u64, Profile)>,
+}
+
 impl ApiState {
-    fn addEdge(&mut self, my: &u64, conns: Vec<(u64, u64)>) {
+    pub fn addEdge(&mut self, my: &u64, conns: Vec<(u64, u64)>) {
         for (id, ts) in &conns{
             let lwr = if id < my {id} else {my};
             let hgr = if id < id {my} else {my};
@@ -43,21 +58,35 @@ impl ApiState {
             }
         }
     }
+
+    pub fn get_graphData(&self) -> GraphDataPacket {
+        let mut profiles = Vec::new();
+        for (k, v) in self.people.iter(){
+            profiles.push((*k,v.clone()));
+        }
+        GraphDataPacket {
+            edges: self.get_edges(), 
+            people: profiles,
+        }
+    }
+
+    fn get_edges(&self) -> Vec<edge> {
+        let mut out = Vec::new();
+        for (from, tomap) in &self.graph {
+            for(to, ts) in tomap {
+                out.push(edge{from: *from, to: *to, ts: *ts});
+            }
+        }
+        out.sort_by(|a, b| a.ts.cmp(&b.ts));
+        out
+    }
 }
 
-#[derive(Deserialize)]
-struct UploadPacket {
-    pub fname: String,
-    pub sname: String,
-    pub pfp: String,
-    pub linkedin: String,
-    pub email: String,
-}
 
-#[get("/idk")]
+#[get("/graphData")]
 async fn hello(state: web::Data<RwLock<ApiState>>) -> impl Responder {
     let s = state.read().unwrap();
-    HttpResponse::Ok().body(s.last.to_string())
+    web::Json(s.get_graphData())
 }
 
 #[post("/upload")]
