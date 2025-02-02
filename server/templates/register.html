@@ -7,9 +7,17 @@
 {% endblock %}
 
 {% block content %}
+
+    
+
 <h1>Register</h1>
 
-    <form action="/register" method="post">
+    <form action="/api/upload" method="post">
+    
+    <label for="name">Name:</label><br>
+    <input type="text" id="name" name="name" required><br><br>
+    
+
     <label for="username">Username:</label><br>
     <input type="text" id="username" name="username" required><br><br>
 
@@ -19,7 +27,88 @@
     <label for="linkedin">Linkedin:</label><br>
     <input type="text" id="linkedin" name="linkedin"><br><br>
 
+    <div style="border: 1px solid black; padding: 10px;">
+    <p>Collect data from reader:</p>
+    <button type="button" id="connectButton">Connect</button>
+    <div id="output"></div>
+
+    <input type="text" id="scan" name="scan" style="pointer-events:none;background:lightgray;" required><br><br>
+    </div>
     <button type="submit">Register</button>
 </form>
+
+
+<script>
+    const connectButton = document.getElementById('connectButton');
+    const outputDiv = document.getElementById('output');
+    const scanin = document.getElementById('scan');
+
+    let port;
+    let writer;
+    let reader;
+    
+    const filters = [
+      { usbVendorId: 0x2e8a, usbProductId: 0x000a },
+    ];
+    
+    connectButton.addEventListener('click', async () => {
+        if (!port) {
+          try {
+            port = await navigator.serial.requestPort({ filters });
+            await port.open({ baudRate: 115200 }); // Adjust baudRate if needed
+    
+            writer = port.writable.getWriter();
+            reader = port.readable.getReader();
+            
+            // outputDiv.innerHTML += '<p>Connected to Serial Port</p>';
+            
+            sendCharAndReadLine(); // Call the function to send and read
+            
+          } catch (error) {
+             outputDiv.innerHTML += `<p>Error opening port: ${error}</p>`;
+          }
+        } else {
+          outputDiv.innerHTML += '<p>Port is already open.</p>';
+        }
+    });
+    
+    
+    
+    async function sendCharAndReadLine() {
+      try {
+        // 1. Send a single character (e.g., 'A')
+        const charToSend = 'R';
+        const data = new Uint8Array([charToSend.charCodeAt(0)]);
+        await writer.write(data);
+        
+    
+        let line = '';
+        const { value, done } = await reader.read();
+        // console.log(value);
+        const decoder = new TextDecoder();
+        const text = decoder.decode(value);
+        // outputDiv.innerHTML += '<p>recieved '+text+'</p>';
+    
+        console.log(text)
+
+        scanin.value = text
+        // SEND
+    
+    
+          
+        
+      } catch (error) {
+        outputDiv.innerHTML += `<p>Error during communication: ${error}</p>`;
+      } finally {
+         // release the reader and writer (optional, useful if you plan to send/read more later)
+          if (reader) {
+              reader.releaseLock();
+          }
+          if (writer) {
+            writer.releaseLock();
+          }
+      }
+    }
+    </script>
 
 {% endblock %}

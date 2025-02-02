@@ -6,8 +6,7 @@ use std::iter;
 
 #[derive(Serialize, Clone)]
 pub struct Profile {
-    pub fname: String,
-    pub sname: String,
+    pub name: String,
     pub pfp: String,
     pub linkedin: String,
     pub email: String,
@@ -89,11 +88,30 @@ async fn hello(state: web::Data<RwLock<ApiState>>) -> impl Responder {
     web::Json(s.get_graphData())
 }
 
+
+
+#[derive(Deserialize, Debug)]
+struct RegistrationData {
+    name: String,
+    username: String,
+    email: String,
+    linkedin: String,
+    scan: String,
+}
+
+
 #[post("/upload")]
-async fn upload_edges(body: String, state: web::Data<RwLock<ApiState>>) -> impl Responder {
+async fn upload_edges(form: web::Form<RegistrationData>, state: web::Data<RwLock<ApiState>>) -> impl Responder {
+
+    let data = form.into_inner();
+    println!("Received registration data: {:?}", data);
+
+
     let mut s = state.write().unwrap();
     println!("skill issue {} {:p}", s.last, &s);
-    s.last = body;
+
+
+    // s.last = body;
     println!("skill issue {}", s.last);
     HttpResponse::Ok().body("Hello world!")
 }
