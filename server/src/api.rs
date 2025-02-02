@@ -33,38 +33,38 @@ impl ApiState {
         };
 
         let p0: Profile = Profile {
-            firstname: "Person 0".to_owned(),
-            lastname: "L0".to_owned(),
-            pfp: "".to_owned(),
-            linkedin: "".to_owned(),
+            firstname: "Petr".to_owned(),
+            lastname: "Olsan".to_owned(),
+            pfp: "/static/petr.jpeg".to_owned(),
+            linkedin: "https://www.linkedin.com/in/petr-olsan/".to_owned(),
             email: "".to_owned(),
         };
         let p1: Profile = Profile {
-            firstname: "Person 1".to_owned(),
-            lastname: "L1".to_owned(),
-            pfp: "".to_owned(),
-            linkedin: "".to_owned(),
+            firstname: "Mateusz".to_owned(),
+            lastname: "Pietrzkiewicz".to_owned(),
+            pfp: "/static/matthew.jpeg".to_owned(),
+            linkedin: "https://www.linkedin.com/in/mateusz-pietrzkiewicz-557a04254/".to_owned(),
             email: "".to_owned(),
         };
         let p2: Profile = Profile {
-            firstname: "Person 2".to_owned(),
-            lastname: "L2".to_owned(),
-            pfp: "".to_owned(),
-            linkedin: "".to_owned(),
+            firstname: "Alex".to_owned(),
+            lastname: "Charlton".to_owned(),
+            pfp: "/static/alex.jpeg".to_owned(),
+            linkedin: "https://www.linkedin.com/in/alexander-charlton-404186259/".to_owned(),
             email: "".to_owned(),
         };
         let p3: Profile = Profile {
-            firstname: "Person 3".to_owned(),
-            lastname: "L3".to_owned(),
-            pfp: "".to_owned(),
-            linkedin: "".to_owned(),
+            firstname: "Quentin".to_owned(),
+            lastname: "Duff".to_owned(),
+            pfp: "/static/quentin.jpeg".to_owned(),
+            linkedin: "https://www.linkedin.com/in/quentin-duff/".to_owned(),
             email: "".to_owned(),
         };
         let p4: Profile = Profile {
-            firstname: "Person 4".to_owned(),
-            lastname: "L4".to_owned(),
-            pfp: "".to_owned(),
-            linkedin: "".to_owned(),
+            firstname: "Rahul".to_owned(),
+            lastname: "Ganish".to_owned(),
+            pfp: "/static/rahul.jpeg".to_owned(),
+            linkedin: "https://www.linkedin.com/in/rahul-ganesh-b9404b23b/".to_owned(),
             email: "".to_owned(),
         };
 
