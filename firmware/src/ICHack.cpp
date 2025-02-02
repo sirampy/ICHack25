@@ -23,6 +23,7 @@
 #include "render.h"
 #include "tetris.h"
 #include "pair.h"
+#include "tx.h"
 
 #if DEBUG
 #include "debug.h"
@@ -41,6 +42,7 @@ enum Mode
   CREDITS = 3,
   QUOTES = 4,
   PAIR = 5,
+  TX_TO_PC = 6,
 };
 
 // Global variables
@@ -124,11 +126,10 @@ int main()
 {
   vreg_set_voltage(vreg_voltage::VREG_VOLTAGE_0_90);
 
-  set_sys_clock_48mhz();
 #if DEBUG
 #else
-  // set_sys_clock_khz(18000, 1);
 #endif
+  set_sys_clock_khz(18000, 1);
 
   stdio_init_all();
 
@@ -281,6 +282,11 @@ int main()
       render_pair(fb, bit_streams);
       mode = Mode::DISPLAY;
     }
+    else if (mode == Mode::TX_TO_PC)
+    {
+      enter_pair(fb, bit_streams);
+      mode = Mode::DISPLAY;
+    }
 
   }
 }
@@ -321,8 +327,9 @@ uint32_t button_press_history = 0;
 #define TETRIS_CODE  0x11332424 // Konami code
 #define SNAKE_CODE   0x333      // DOWN DOWN DOWN
 #define CREDITS_CODE 0x222      // LEFT LEFT LEFT
-#define QUOTES_CODE  0x444      // RIGHT RIGHT RIGHT
-#define PAIR_CODE    0x111      // RIGHT RIGHT RIGHT
+#define QUOTES_CODE  0x1234     
+#define PAIR_CODE    0x111      // UP UP UP
+#define TX_CODE      0x444      // RIGHT RIGHT RIGHT
 
 
 inline void handle_gamepad()
@@ -355,7 +362,7 @@ inline void handle_gamepad()
       mode = CREDITS;
       button_press_history = 0;
     }
-    else if ((button_press_history & 0xFFF) == QUOTES_CODE)
+    else if ((button_press_history & 0xFFFF) == QUOTES_CODE)
     {
       mode = QUOTES;
       button_press_history = 0;
@@ -363,6 +370,11 @@ inline void handle_gamepad()
     else if ((button_press_history & 0xFFF) == PAIR_CODE)
     {
       mode = PAIR;
+      button_press_history = 0;
+    }
+    else if ((button_press_history & 0xFFF) == TX_CODE)
+    {
+      mode = TX_TO_PC;
       button_press_history = 0;
     }
 

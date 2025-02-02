@@ -49,6 +49,7 @@ add_executable(ICHack
     src/render.cpp
     src/pair.cpp
     src/input.cpp
+    src/tx.cpp
     )
 
 add_compile_definitions(DEBUG=0)

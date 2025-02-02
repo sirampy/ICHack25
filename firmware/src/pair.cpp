@@ -16,6 +16,13 @@
 
 
 uint8_t scans[512];
+uint32_t times[512];
+uint8_t idx = 0;
+
+static int code = 42; // 0-255
+
+// 00 10 10 10
+// 0  2  2  2
 
 // Quotes
 
@@ -33,8 +40,23 @@ void screendisp(uint32_t *const fb, uint32_t bit_streams[10], const char* str)
     return;
 }
 
+#define OFFSET '\204'
 
-#define MYSELF = 0 // 0-255
+void code_output(uint32_t *fb, uint32_t *bit_streams){
+
+    // up down left right
+    char outstr[] = "ZZZZZ";
+
+    // top is least endianness
+
+    for (int i = 4; i > 0; --i){
+        outstr[i] = OFFSET + ((code >> (i-1)*2) & 0b11);
+    }
+    outstr[0] = OFFSET + (code % 4);
+
+    string_banner_output(fb, (const unsigned char*)outstr, ARRAY_LENGTH(outstr), 24);
+
+}
 
 
 void render_pair(uint32_t *fb, uint32_t *bit_streams)
@@ -43,8 +65,11 @@ void render_pair(uint32_t *fb, uint32_t *bit_streams)
     const static unsigned char tetris_str[] = "T\205\206\207\206";
 
     // int i = (string_width(ARRAY_LENGTH(tetris_str)) + (FB_WIDTH << 1)) /2 ;
-    int i = 24;
-    string_banner_output(fb, tetris_str, ARRAY_LENGTH(tetris_str), i);
+    // int i = 24;
+    // string_banner_output(fb, tetris_str, ARRAY_LENGTH(tetris_str), i);
+
+    code_output(fb, bit_streams);
+
 
     for (int i = 0; i  < 10; ++i){ // prevent overclick
         standard_render_fb(fb, bit_streams); // 10ms
@@ -84,13 +109,18 @@ void render_pair(uint32_t *fb, uint32_t *bit_streams)
         standard_render_fb(fb, bit_streams);
     }
 
-    uint8_t out = arrows[0] + (arrows[1]<<2) + (arrows[2]<<4) + (arrows[3]<<6);
+    // for (int i = 0; i < 4; ++i){
+    //     printf("req %d\n", arrows[i]);
+    // }
+
+    uint8_t out = arrows[3] + (arrows[2]<<2) + (arrows[1]<<4) + (arrows[0]<<6);
     printf("%d id entered!\n", out);
 
     if (out % 4 == arrows[4]){
-        screendisp(fb, bit_streams, "Y ");
-        // PUSH
+        screendisp(fb, bit_streams, "SAVE");
+        scans[idx++] = out;
+    } else{
+        screendisp(fb, bit_streams, "FAIL" );
     }
-    screendisp(fb, bit_streams, "N" );
 
 }
