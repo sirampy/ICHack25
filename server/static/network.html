@@ -49,7 +49,7 @@
       border-radius: 3px;
       margin-top: 5px;
     }
-    /* Hide playback controls by default (we’ll show one mode or the other) */
+    /* Hide playback controls by default */
     .playback-only {
       display: none;
     }
@@ -101,148 +101,158 @@
   <!-- Load D3.js from a CDN -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script>
-    // ------------------------------
-    // Data: Nodes and Edges (Links)
-    // ------------------------------
-    const nodes = [
-      { id: "1", name: "Alice", img: "https://randomuser.me/api/portraits/women/1.jpg", linkedin: "https://linkedin.com/in/alice", email: "alice@example.com" },
-      { id: "2", name: "Bob", img: "https://randomuser.me/api/portraits/men/2.jpg", linkedin: "https://linkedin.com/in/bob", email: "bob@example.com" },
-      { id: "3", name: "Carol", img: "https://randomuser.me/api/portraits/women/3.jpg", linkedin: "https://linkedin.com/in/carol", email: "carol@example.com" },
-      { id: "4", name: "Dave", img: "https://randomuser.me/api/portraits/men/4.jpg", linkedin: "https://linkedin.com/in/dave", email: "dave@example.com" },
-      { id: "5", name: "Eve", img: "https://randomuser.me/api/portraits/women/5.jpg", linkedin: "https://linkedin.com/in/eve", email: "eve@example.com" },
-      { id: "6", name: "Frank", img: "https://randomuser.me/api/portraits/men/6.jpg", linkedin: "https://linkedin.com/in/frank", email: "frank@example.com" },
-      { id: "7", name: "Grace", img: "https://randomuser.me/api/portraits/women/7.jpg", linkedin: "https://linkedin.com/in/grace", email: "grace@example.com" },
-      { id: "8", name: "Henry", img: "https://randomuser.me/api/portraits/men/8.jpg", linkedin: "https://linkedin.com/in/henry", email: "henry@example.com" },
-      { id: "9", name: "Ivy", img: "https://randomuser.me/api/portraits/women/9.jpg", linkedin: "https://linkedin.com/in/ivy", email: "ivy@example.com" },
-      { id: "10", name: "Jack", img: "https://randomuser.me/api/portraits/men/10.jpg", linkedin: "https://linkedin.com/in/jack", email: "jack@example.com" },
-      { id: "11", name: "Alex", img: "/images/alex.jpeg", linkedin: "https://linkedin.com/in/ivy", email: "ivy@example.com" },
-      { id: "12", name: "Matthew", img: "/images/matthew.jpeg", linkedin: "https://linkedin.com/in/ivy", email: "ivy@example.com" },
-      { id: "13", name: "Petr", img: "/images/petr.jpeg", linkedin: "https://linkedin.com/in/ivy", email: "ivy@example.com" },
-      { id: "14", name: "Quentin", img: "/images/quentin.jpeg", linkedin: "https://linkedin.com/in/ivy", email: "ivy@example.com" },
-      { id: "15", name: "Rahul", img: "/images/rahul.jpeg", linkedin: "https://linkedin.com/in/ivy", email: "ivy@example.com" }
-    ];
-
-    // Each link now has a time property (times on Feb 2, 2025)
-    const links = [
-      { source: "1", target: "2", time: "2025-02-02T00:10:00" },
-      { source: "1", target: "3", time: "2025-02-02T00:20:00" },
-      { source: "1", target: "4", time: "2025-02-02T00:30:00" },
-      { source: "2", target: "5", time: "2025-02-02T00:40:00" },
-      { source: "3", target: "6", time: "2025-02-02T00:50:00" },
-      { source: "4", target: "7", time: "2025-02-02T01:00:00" },
-      { source: "4", target: "8", time: "2025-02-02T01:10:00" },
-      { source: "5", target: "9", time: "2025-02-02T01:20:00" },
-      { source: "5", target: "10", time: "2025-02-02T01:30:00" },
-      { source: "3", target: "9", time: "2025-02-02T01:40:00" },
-      { source: "7", target: "10", time: "2025-02-02T01:50:00" },
-      { source: "12", target: "7", time: "2025-02-02T02:00:00" },
-      { source: "13", target: "1", time: "2025-02-02T02:10:00" },
-      { source: "14", target: "10", time: "2025-02-02T02:20:00" },
-      { source: "11", target: "12", time: "2025-02-02T02:30:00" },
-      { source: "11", target: "13", time: "2025-02-02T02:40:00" },
-      { source: "11", target: "14", time: "2025-02-02T02:50:00" },
-      { source: "11", target: "15", time: "2025-02-02T03:00:00" },
-      { source: "12", target: "13", time: "2025-02-02T03:10:00" },
-      { source: "12", target: "14", time: "2025-02-02T03:20:00" },
-      { source: "12", target: "15", time: "2025-02-02T03:30:00" },
-      { source: "13", target: "14", time: "2025-02-02T03:40:00" },
-      { source: "13", target: "15", time: "2025-02-02T03:50:00" },
-      { source: "14", target: "15", time: "2025-02-02T04:00:00" }
-    ];
+    // Global variables for nodes and links.
+    let nodes = [];
+    let links = [];
 
     // ------------------------------
-    // SVG, Zoom/Pan, and Simulation Setup
+    // Fetch Data from API and Preload Images
     // ------------------------------
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-    const svg = d3.select("#network")
-      .attr("width", width)
-      .attr("height", height);
+    function fetchNetworkData(apiUrl) {
+      return fetch(apiUrl)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("Network response was not ok: " + response.statusText);
+          }
+          return response.json();
+        })
+        .then(data => {
+          // Assume API returns { nodes: [...], links: [...] }
+          nodes = data.nodes;
+          links = data.links;
+          // Preload each node's image using fetch and convert to an object URL.
+          return Promise.all(nodes.map(node =>
+            fetch(node.img)
+              .then(resp => {
+                if (!resp.ok) {
+                  throw new Error("Image fetch failed for node " + node.id);
+                }
+                return resp.blob();
+              })
+              .then(blob => {
+                node.img = URL.createObjectURL(blob);
+                return node;
+              })
+              .catch(err => {
+                console.error("Error loading image for node", node.id, err);
+                // Fallback: keep the original URL.
+                return node;
+              })
+          ));
+        });
+    }
 
-    // Append a container group for pan/zoom
-    const container = svg.append("g");
-
-    // Define a clipPath for circular images
-    svg.append("defs")
-      .append("clipPath")
-      .attr("id", "clip-circle")
-      .append("circle")
-      .attr("cx", 0)
-      .attr("cy", 0)
-      .attr("r", 30);
-
-    // Set up zoom and pan behavior
-    const zoom = d3.zoom()
-      .scaleExtent([0.1, 10])
-      .on("zoom", (event) => {
-        container.attr("transform", event.transform);
-      });
-    svg.call(zoom);
-
-    // Set up the force simulation with nodes and links
-    const simulation = d3.forceSimulation(nodes)
-      .force("link", d3.forceLink(links)
-        .id(d => d.id)
-        .distance(150)
-      )
-      .force("charge", d3.forceManyBody().strength(-300))
-      .force("center", d3.forceCenter(width / 2, height / 2));
-
-    // ------------------------------
-    // Drawing: Links and Nodes
-    // ------------------------------
-    // Link group
-    const linkGroup = container.append("g")
-      .attr("stroke", "#aaa")
-      .attr("stroke-width", 2);
-    // Initially bind all links
-    let linkSelection = linkGroup.selectAll("line")
-      .data(links)
-      .enter()
-      .append("line");
-
-    // Nodes
-    const node = container.selectAll(".node")
-      .data(nodes)
-      .enter()
-      .append("g")
-      .attr("class", "node")
-      .call(drag(simulation))
-      .on("click", (event, d) => {
-        window.location.href = `./profile.html?id=${d.id}`;
+    // Call the API – replace with your actual API endpoint.
+    // For example: "https://api.example.com/network"
+    fetchNetworkData("https://api.example.com/network")
+      .then(() => {
+        // Once data is loaded and images are preloaded, initialize the simulation.
+        initSimulation();
+        // Optionally, set the default manual time input to the latest link time.
+        const latestEdgeTime = new Date(Math.max(...links.map(link => new Date(link.time))));
+        document.getElementById("networkTime").value = latestEdgeTime.toISOString().slice(0,16);
+        // Also, set default values for playback controls:
+        document.getElementById("startTime").value = links[0].time;
+        document.getElementById("endTime").value = latestEdgeTime.toISOString().slice(0,16);
+      })
+      .catch(err => {
+        console.error("Error fetching network data:", err);
       });
 
-    // Node circles
-    node.append("circle")
-      .attr("r", 30)
-      .attr("fill", "white")
-      .attr("stroke", "#007BFF")
-      .attr("stroke-width", 3);
+    // ------------------------------
+    // Simulation and Visualization Setup
+    // ------------------------------
+    let simulation, linkGroup, linkSelection, nodeSelection;
 
-    // Node images
-    node.append("image")
-      .attr("xlink:href", d => d.img)
-      .attr("x", -30)
-      .attr("y", -30)
-      .attr("width", 60)
-      .attr("height", 60)
-      .attr("clip-path", "url(#clip-circle)");
+    function initSimulation() {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      const svg = d3.select("#network")
+        .attr("width", width)
+        .attr("height", height);
 
-    // Node labels
-    node.append("text")
-      .attr("dy", 45)
-      .attr("text-anchor", "middle")
-      .text(d => d.name);
+      // Append a container group for pan/zoom
+      const container = svg.append("g");
 
-    // Update simulation on each tick
-    simulation.on("tick", () => {
-      linkGroup.selectAll("line")
-        .attr("x1", d => d.source.x)
-        .attr("y1", d => d.source.y)
-        .attr("x2", d => d.target.x)
-        .attr("y2", d => d.target.y);
-      node.attr("transform", d => `translate(${d.x},${d.y})`);
-    });
+      // Define a clipPath for circular images
+      svg.append("defs")
+        .append("clipPath")
+        .attr("id", "clip-circle")
+        .append("circle")
+        .attr("cx", 0)
+        .attr("cy", 0)
+        .attr("r", 30);
+
+      // Set up zoom and pan behavior
+      const zoom = d3.zoom()
+        .scaleExtent([0.1, 10])
+        .on("zoom", (event) => {
+          container.attr("transform", event.transform);
+        });
+      svg.call(zoom);
+
+      // Initialize force simulation
+      simulation = d3.forceSimulation(nodes)
+        .force("link", d3.forceLink(links)
+          .id(d => d.id)
+          .distance(150)
+        )
+        .force("charge", d3.forceManyBody().strength(-300))
+        .force("center", d3.forceCenter(width / 2, height / 2));
+
+      // Create link group
+      linkGroup = container.append("g")
+        .attr("stroke", "#aaa")
+        .attr("stroke-width", 2);
+      // Bind links initially
+      linkSelection = linkGroup.selectAll("line")
+        .data(links)
+        .enter()
+        .append("line");
+
+      // Create node group
+      nodeSelection = container.selectAll(".node")
+        .data(nodes)
+        .enter()
+        .append("g")
+        .attr("class", "node")
+        .call(drag(simulation))
+        .on("click", (event, d) => {
+          window.location.href = `./profile.html?id=${d.id}`;
+        });
+
+      // Append node circles
+      nodeSelection.append("circle")
+        .attr("r", 30)
+        .attr("fill", "white")
+        .attr("stroke", "#007BFF")
+        .attr("stroke-width", 3);
+
+      // Append node images
+      nodeSelection.append("image")
+        .attr("xlink:href", d => d.img)
+        .attr("x", -30)
+        .attr("y", -30)
+        .attr("width", 60)
+        .attr("height", 60)
+        .attr("clip-path", "url(#clip-circle)");
+
+      // Append node labels
+      nodeSelection.append("text")
+        .attr("dy", 45)
+        .attr("text-anchor", "middle")
+        .text(d => d.name);
+
+      // Update simulation on each tick
+      simulation.on("tick", () => {
+        linkGroup.selectAll("line")
+          .attr("x1", d => d.source.x)
+          .attr("y1", d => d.source.y)
+          .attr("x2", d => d.target.x)
+          .attr("y2", d => d.target.y);
+        nodeSelection.attr("transform", d => `translate(${d.x},${d.y})`);
+      });
+    }
 
     function drag(simulation) {
       function dragstarted(event, d) {
@@ -268,20 +278,19 @@
     // ------------------------------
     // Time-Filtering Functionality
     // ------------------------------
-    // This function filters the links (edges) based on the provided Date object.
+    // This function filters the links based on the provided Date object.
     function updateNetworkForTime(simTime) {
       console.log("Updating network for time:", simTime);
       const filteredLinks = links.filter(link => new Date(link.time) <= simTime);
       console.log("Filtered links:", filteredLinks);
       simulation.force("link").links(filteredLinks);
-      // Use a key function that works with both string and object sources
       const linkKey = d => `${(d.source.id || d.source)}-${(d.target.id || d.target)}`;
       linkSelection = linkGroup.selectAll("line").data(filteredLinks, linkKey);
       linkSelection.exit().remove();
       linkSelection.enter().append("line")
         .attr("stroke", "#aaa")
         .attr("stroke-width", 2);
-      // Lower the alpha target for smoother transitions (instead of snapping abruptly)
+      // For a smoother transition, use a lower alpha target.
       simulation.alphaTarget(0.3).restart();
     }
 
@@ -307,7 +316,7 @@
 
     let playbackTimer = null;
 
-    // Set default values for playback controls:
+    // Set default playback values (you can adjust these as needed)
     startTimeInput.value = "2025-02-02T00:10:00";
     endTimeInput.value = "2025-02-02T04:00:00";
 
@@ -353,26 +362,20 @@
     const manualControlsDiv = document.getElementById("manualControls");
     const playbackControlsDiv = document.getElementById("playbackControls");
 
-    // Function to update visible controls based on selected mode.
     function updateMode() {
       const mode = Array.from(modeRadios).find(radio => radio.checked).value;
       if (mode === "manual") {
-        manualTimeInput.style.display = "block";
-        // Show the manual datetime input (already in manualControls)
-        document.getElementById("manualControls").style.display = "block";
-        document.getElementById("playbackControls").style.display = "none";
+        manualControlsDiv.style.display = "block";
+        playbackControlsDiv.style.display = "none";
       } else {
-        document.getElementById("manualControls").style.display = "none";
-        document.getElementById("playbackControls").style.display = "block";
+        manualControlsDiv.style.display = "none";
+        playbackControlsDiv.style.display = "block";
       }
     }
 
-    // Set up mode radio listeners.
     Array.from(modeRadios).forEach(radio => {
       radio.addEventListener("change", updateMode);
     });
-
-    // Initialize mode display
     updateMode();
   </script>
 </body>
