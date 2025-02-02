@@ -30,7 +30,9 @@ impl ApiState {
                     | Some(old_ts) => {
                         if *old_ts > *ts {*old_ts = *ts};
                     }
-                    | None => {}
+                    | None => {
+                        m.insert(hgr, ts);
+                    }
                     }
                 }
                 | None => {
