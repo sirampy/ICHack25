@@ -67,37 +67,144 @@ impl ApiState {
             linkedin: "https://www.linkedin.com/in/rahul-ganesh-b9404b23b/".to_owned(),
             email: "".to_owned(),
         };
+        // p5: Emily Johnson (female)
+        let p5: Profile = Profile {
+            firstname: "Emily".to_owned(),
+            lastname: "Johnson".to_owned(),
+            pfp: "https://randomuser.me/api/portraits/women/10.jpg".to_owned(),
+            linkedin: "".to_owned(),
+            email: "".to_owned(),
+        };
 
+        // p6: Michael Smith (male)
+        let p6: Profile = Profile {
+            firstname: "Michael".to_owned(),
+            lastname: "Smith".to_owned(),
+            pfp: "https://randomuser.me/api/portraits/men/10.jpg".to_owned(),
+            linkedin: "".to_owned(),
+            email: "".to_owned(),
+        };
+
+        // p7: Sarah Williams (female)
+        let p7: Profile = Profile {
+            firstname: "Sarah".to_owned(),
+            lastname: "Williams".to_owned(),
+            pfp: "https://randomuser.me/api/portraits/women/11.jpg".to_owned(),
+            linkedin: "".to_owned(),
+            email: "".to_owned(),
+        };
+
+        // p8: David Brown (male)
+        let p8: Profile = Profile {
+            firstname: "David".to_owned(),
+            lastname: "Brown".to_owned(),
+            pfp: "https://randomuser.me/api/portraits/men/11.jpg".to_owned(),
+            linkedin: "".to_owned(),
+            email: "".to_owned(),
+        };
+
+        // p9: Olivia Jones (female)
+        let p9: Profile = Profile {
+            firstname: "Olivia".to_owned(),
+            lastname: "Jones".to_owned(),
+            pfp: "https://randomuser.me/api/portraits/women/12.jpg".to_owned(),
+            linkedin: "".to_owned(),
+            email: "".to_owned(),
+        };
+
+        // p10: Daniel Miller (male)
+        let p10: Profile = Profile {
+            firstname: "Daniel".to_owned(),
+            lastname: "Miller".to_owned(),
+            pfp: "https://randomuser.me/api/portraits/men/12.jpg".to_owned(),
+            linkedin: "".to_owned(),
+            email: "".to_owned(),
+        };
+
+        // p11: Sophia Davis (female)
+        let p11: Profile = Profile {
+            firstname: "Sophia".to_owned(),
+            lastname: "Davis".to_owned(),
+            pfp: "https://randomuser.me/api/portraits/women/13.jpg".to_owned(),
+            linkedin: "".to_owned(),
+            email: "".to_owned(),
+        };
+
+        
         state.people.insert(0, p0);
         state.people.insert(1, p1);
         state.people.insert(2, p2);
         state.people.insert(3, p3);
         state.people.insert(4, p4);
+        state.people.insert(5, p5);
+        state.people.insert(6, p6);
+        state.people.insert(7, p7);
+        state.people.insert(8, p8);
+        state.people.insert(9, p9);
+        state.people.insert(10, p10);
+        state.people.insert(11, p11);
+        
 
         // p0scans
         let mut p0scans = HashMap::new();
-        p0scans.insert(4 as u64, Local::now() - Duration::minutes(10));
+        p0scans.insert(4 as u64, Local::now() + Duration::minutes(10));
         state.graph.insert(0 as u64, p0scans);
 
-        // p0scans
+        // p1scans
         let mut p1scans = HashMap::new();
-        p1scans.insert(4 as u64, Local::now() - Duration::minutes(25));
-        p1scans.insert(3 as u64, Local::now() - Duration::minutes(10));
-        p1scans.insert(2 as u64, Local::now() - Duration::minutes(20));
+        p1scans.insert(4 as u64, Local::now() + Duration::minutes(25));
+        p1scans.insert(3 as u64, Local::now() + Duration::minutes(10));
+        p1scans.insert(2 as u64, Local::now() + Duration::minutes(20));
         state.graph.insert(1 as u64, p1scans);
 
-        // p0scans
+        // p2scans
         let mut p2scans = HashMap::new();
         state.graph.insert(2 as u64, p2scans);
 
-        // p0scans
+        // p3scans
         let mut p3scans = HashMap::new();
-        p3scans.insert(4 as u64, Local::now() - Duration::minutes(5));
+        p3scans.insert(4 as u64, Local::now() + Duration::minutes(5));
         state.graph.insert(3 as u64, p3scans);
 
-        // p0scans
+        // p4scans
         let mut p4scans = HashMap::new();
         state.graph.insert(4 as u64, p4scans);
+
+        // Person 5 connects to persons 8 and 9.
+        let mut p5scans = HashMap::new();
+        p5scans.insert(6, Local::now() + Duration::minutes(5));
+        p5scans.insert(7, Local::now() + Duration::minutes(15));
+        state.graph.insert(5, p5scans);
+
+        // Person 6 connects to person 10.
+        let mut p6scans = HashMap::new();
+        p6scans.insert(8, Local::now() + Duration::minutes(10));
+        state.graph.insert(6, p6scans);
+
+        // Person 7 connects to person 11.
+        let mut p7scans = HashMap::new();
+        p7scans.insert(8, Local::now() + Duration::minutes(10));
+        state.graph.insert(7, p7scans);
+
+        // Person 8 connects to person 0.
+        let mut p8scans = HashMap::new();
+        p8scans.insert(3, Local::now() + Duration::minutes(30));
+        state.graph.insert(8, p8scans);
+
+        // Person 9 connects to person 2.
+        let mut p9scans = HashMap::new();
+        p9scans.insert(2, Local::now() + Duration::minutes(40));
+        state.graph.insert(9, p9scans);
+
+        // Person 10 connects to person 4.
+        let mut p10scans = HashMap::new();
+        p10scans.insert(4, Local::now() + Duration::minutes(20));
+        state.graph.insert(10, p10scans);
+
+        // Person 11 connects to person 3.
+        let mut p11scans = HashMap::new();
+        p11scans.insert(3, Local::now()+ Duration::minutes(30));
+        state.graph.insert(11, p11scans);
 
         state
     }
