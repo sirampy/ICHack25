@@ -54,41 +54,45 @@
   </div>
 
   <script>
-    // Extract the 'id' parameter from the URL query string
+    // Extract the 'id' parameter from the URL query string.
     const params = new URLSearchParams(window.location.search);
     const userId = params.get('id');
 
-    // For demonstration purposes, we define user data here.
-    // In a real app, you'd likely fetch this data from your server.
-    const users = {
-      "1": { name: "Alice", img: "https://randomuser.me/api/portraits/women/1.jpg", linkedin: "https://linkedin.com/in/alice", email: "alice@example.com" },
-      "2": { name: "Bob", img: "https://randomuser.me/api/portraits/men/2.jpg", linkedin: "https://linkedin.com/in/bob", email: "bob@example.com" },
-      "3": { name: "Carol", img: "https://randomuser.me/api/portraits/women/3.jpg", linkedin: "https://linkedin.com/in/carol", email: "carol@example.com" },
-      "4": { name: "Dave", img: "https://randomuser.me/api/portraits/men/4.jpg", linkedin: "https://linkedin.com/in/dave", email: "dave@example.com" },
-      "5": { name: "Eve", img: "https://randomuser.me/api/portraits/women/5.jpg", linkedin: "https://linkedin.com/in/eve", email: "eve@example.com" },
-      "6": { name: "Frank", img: "https://randomuser.me/api/portraits/men/6.jpg", linkedin: "https://linkedin.com/in/frank", email: "frank@example.com" },
-      "7": { name: "Grace", img: "https://randomuser.me/api/portraits/women/7.jpg", linkedin: "https://linkedin.com/in/grace", email: "grace@example.com" },
-      "8": { name: "Henry", img: "https://randomuser.me/api/portraits/men/8.jpg", linkedin: "https://linkedin.com/in/henry", email: "henry@example.com" },
-      "9": { name: "Ivy", img: "https://randomuser.me/api/portraits/women/9.jpg", linkedin: "https://linkedin.com/in/ivy", email: "ivy@example.com" },
-      "10":{ name: "Jack", img: "https://randomuser.me/api/portraits/men/10.jpg", linkedin: "https://linkedin.com/in/jack", email: "jack@example.com" },
-      "11":{ name: "Alex", img: "/images/alex.jpeg", linkedin: "https://www.linkedin.com/in/alexander-charlton-404186259/", email: "ac5542@ic.ac.uk" },
-      "12":{ name: "Matthew", img: "/images/matthew.jpeg", linkedin: "https://linkedin.com/in/ivy", email: "ivy@example.com" },
-      "13":{ name: "Petr", img: "/images/petr.jpeg", linkedin: "https://www.linkedin.com/in/petr-olsan/", email: "pmo22@ic.ac.uk" },
-      "14":{ name: "Quentin", img: "/images/quentin.jpeg", linkedin: "https://linkedin.com/in/ivy", email: "ivy@example.com" },
-      "15":{ name: "Rahul", img: "/images/rahul.jpeg", linkedin: "https://linkedin.com/in/ivy", email: "ivy@example.com" }
-    };
+    // Fetch the graph data from your API.
+    fetch("http://127.0.0.1:8080/api/graphData")
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok: " + response.statusText);
+        }
+        return response.json();
+      })
+      .then(data => {
+        // The API returns an object with "edges" and "people".
+        // We only need "people" here.
+        // data.people is an array of [id, profile] pairs.
+        let people = {};
+        data.people.forEach(pair => {
+          // Convert the id to string for consistency.
+          people[pair[0].toString()] = pair[1];
+        });
 
-    const user = users[userId];
-
-    if (user) {
-      document.getElementById("profileImg").src = user.img;
-      document.getElementById("profileName").textContent = user.name;
-      document.getElementById("linkedinLink").href = user.linkedin;
-      document.getElementById("linkedinLink").textContent = "LinkedIn Profile";
-      document.getElementById("email").textContent = user.email;
-    } else {
-      document.querySelector('.profile').innerHTML = '<p>User not found.</p>';
-    }
+        // Look up the profile for the given user id.
+        const user = people[userId];
+        if (user) {
+          // If an image URL is provided, use it; otherwise, use a default image.
+          // (If your API returns a valid image URL, you could also preload it.)
+          document.getElementById("profileImg").src = user.pfp !== "" ? user.pfp : "https://via.placeholder.com/150";
+          document.getElementById("profileName").textContent = user.name;
+          document.getElementById("linkedinLink").href = user.linkedin;
+          document.getElementById("email").textContent = user.email;
+        } else {
+          document.querySelector('.profile').innerHTML = '<p>User not found.</p>';
+        }
+      })
+      .catch(err => {
+        console.error("Error fetching profile data:", err);
+        document.querySelector('.profile').innerHTML = '<p>Error loading profile.</p>';
+      });
   </script>
 </body>
 </html>
