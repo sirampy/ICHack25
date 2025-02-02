@@ -17,9 +17,42 @@
       fill: #333;
       pointer-events: none;
     }
+    /* Styling for the time input container */
+    #time-input-container {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background-color: white;
+      padding: 5px 10px;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      z-index: 10;
+      font-size: 14px;
+    }
+    #time-input-container input {
+      font-size: 14px;
+      padding: 3px;
+    }
+    #time-input-container button {
+      font-size: 14px;
+      padding: 3px 6px;
+      margin-left: 5px;
+      cursor: pointer;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 3px;
+    }
   </style>
 </head>
 <body>
+  <!-- Time Input Container (new functionality) -->
+  <div id="time-input-container">
+    <label for="networkTime">Select Time:</label>
+    <input type="datetime-local" id="networkTime">
+    <button id="updateNetwork">Update Network</button>
+  </div>
+
   <svg id="network"></svg>
 
   <!-- Load D3.js from a CDN -->
@@ -36,7 +69,13 @@
       { id: "7", name: "Grace", img: "https://randomuser.me/api/portraits/women/7.jpg", linkedin: "https://linkedin.com/in/grace", email: "grace@example.com" },
       { id: "8", name: "Henry", img: "https://randomuser.me/api/portraits/men/8.jpg", linkedin: "https://linkedin.com/in/henry", email: "henry@example.com" },
       { id: "9", name: "Ivy", img: "https://randomuser.me/api/portraits/women/9.jpg", linkedin: "https://linkedin.com/in/ivy", email: "ivy@example.com" },
-      { id: "10", name: "Jack", img: "https://randomuser.me/api/portraits/men/10.jpg", linkedin: "https://linkedin.com/in/jack", email: "jack@example.com" }
+      { id: "10", name: "Jack", img: "https://randomuser.me/api/portraits/men/10.jpg", linkedin: "https://linkedin.com/in/jack", email: "jack@example.com" },
+      { id: "11", name: "Alex", img: "/images/alex.jpeg", linkedin: "https://linkedin.com/in/ivy", email: "ivy@example.com" },
+      { id: "12", name: "Matthew", img: "/images/matthew.jpeg", linkedin: "https://linkedin.com/in/ivy", email: "ivy@example.com" },
+      { id: "13", name: "Petr", img: "/images/petr.jpeg", linkedin: "https://linkedin.com/in/ivy", email: "ivy@example.com" },
+      { id: "14", name: "Quentin", img: "/images/quentin.jpeg", linkedin: "https://linkedin.com/in/ivy", email: "ivy@example.com" },
+      { id: "15", name: "Rahul", img: "/images/rahul.jpeg", linkedin: "https://linkedin.com/in/ivy", email: "ivy@example.com" }
+      
     ];
 
     const links = [
@@ -51,7 +90,22 @@
       { source: "5", target: "10" },
       // Additional connections:
       { source: "3", target: "9" },
-      { source: "7", target: "10" }
+      { source: "7", target: "10" },
+      //Personal connecitons
+      { source: "12", target: "7" },
+      { source: "13", target: "1" },
+      { source: "14", target: "10" },
+
+      { source: "11", target: "12" },
+      { source: "11", target: "13" },
+      { source: "11", target: "14" },
+      { source: "11", target: "15" },
+      { source: "12", target: "13" },
+      { source: "12", target: "14" },
+      { source: "12", target: "15" },
+      { source: "13", target: "14" },
+      { source: "13", target: "15" },
+      { source: "14", target: "15" }
     ];
 
     // Set up the SVG dimensions to fill the viewport
@@ -98,7 +152,6 @@
       // Add a click event to redirect to the profile page
       .on("click", (event, d) => {
         window.location.href = `./profile.html?id=${d.id}`;
-
       });
 
     // Append a circle as a border/background for each node
@@ -155,6 +208,49 @@
         .on("drag", dragged)
         .on("end", dragended);
     }
+
+    // --- Time Input Functionality (new) ---
+    // Function to format the current datetime for a datetime-local input
+    function getCurrentDateTimeLocal() {
+      const now = new Date();
+      const pad = (num) => (num < 10 ? '0' + num : num);
+      const year = now.getFullYear();
+      const month = pad(now.getMonth() + 1);
+      const day = pad(now.getDate());
+      const hours = pad(now.getHours());
+      const minutes = pad(now.getMinutes());
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+    // Set the default value of the time input to the current datetime
+    document.getElementById("networkTime").value = getCurrentDateTimeLocal();
+
+    // When the update button is clicked, send the selected time to the server
+    document.getElementById("updateNetwork").addEventListener("click", () => {
+      const selectedTime = document.getElementById("networkTime").value;
+      console.log("Selected time:", selectedTime);
+      // Example: Send the selected time to your server via a GET request.
+      // Replace the URL below with your actual API endpoint.
+      fetch(`/api/network?time=${encodeURIComponent(selectedTime)}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log("Network data for selected time:", data);
+          // Here you could update the network visualization based on the returned data.
+          // For example:
+          // nodes = data.nodes;
+          // links = data.links;
+          // renderNetwork(nodes, links);
+          alert("Network updated for time: " + selectedTime);
+        })
+        .catch(error => {
+          console.error("Error updating network:", error);
+          alert("There was an error updating the network. Please try again.");
+        });
+    });
   </script>
 </body>
 </html>
