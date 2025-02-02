@@ -1,5 +1,6 @@
 use actix_web::{cookie::time::Date, get, post, web, App, HttpResponse, HttpServer, Responder};
 use chrono::{DateTime, Local, Utc};
+use serde_json::Value;
 use std::sync::RwLock;
 use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
@@ -147,6 +148,12 @@ struct RegistrationData {
     scan: String,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+struct ScanData {
+    myid: u8,
+    scans: Vec<Vec<u64>>,
+}
+
 
 #[post("/upload")]
 async fn upload_edges(form: web::Form<RegistrationData>, state: web::Data<RwLock<ApiState>>) -> impl Responder {
@@ -154,13 +161,15 @@ async fn upload_edges(form: web::Form<RegistrationData>, state: web::Data<RwLock
     let data = form.into_inner();
     println!("Received registration data: {:?}", data);
 
+    let sd: ScanData = serde_json::from_str(&data.scan).unwrap();
+
+    println!("{:?}", sd); //TODO use this MF
 
     let mut s = state.write().unwrap();
-    // println!("skill issue {} {:p}", s.last, &s);
+
+    
 
 
-    // s.last = body;
-    // println!("skill issue {}", s.last);
     HttpResponse::Ok().body("Hello world!")
 }
 

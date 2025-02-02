@@ -16,8 +16,10 @@ void enter_pair(uint32_t *const fb, uint32_t *bit_streams){
     
     printf("{\"myid\": %d,\"scans\":[", code);
     for (int i = 0; i < idx; ++i){
-        // printf("%llu\n", times[i]);
-        printf("[%hhu, %llu],",scans[i], (cur_time_ns - times[i] ) / 1000000);
+        if (i != 0)
+            printf(",");
+
+        printf("[%hhu, %llu]",scans[i], (cur_time_ns - times[i] ) / 1000000);
     }
     printf("]}");
 
