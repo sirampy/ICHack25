@@ -17,40 +17,83 @@
       fill: #333;
       pointer-events: none;
     }
-    /* Styling for the time input container */
-    #time-input-container {
+    /* Styling for the control container */
+    #control-container {
       position: absolute;
       top: 10px;
       left: 10px;
       background-color: white;
-      padding: 5px 10px;
+      padding: 10px;
       border-radius: 5px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
       z-index: 10;
       font-size: 14px;
     }
-    #time-input-container input {
+    #control-container label {
+      margin-right: 5px;
+    }
+    #control-container input {
       font-size: 14px;
       padding: 3px;
+      margin-bottom: 5px;
+      display: block;
     }
-    #time-input-container button {
+    #control-container button {
       font-size: 14px;
       padding: 3px 6px;
-      margin-left: 5px;
+      margin-right: 5px;
       cursor: pointer;
       background-color: #007BFF;
       color: white;
       border: none;
       border-radius: 3px;
+      margin-top: 5px;
+    }
+    /* Hide playback controls by default */
+    .playback-only {
+      display: none;
     }
   </style>
 </head>
 <body>
-  <!-- Time Input Container (new functionality) -->
-  <div id="time-input-container">
-    <label for="networkTime">Select Time:</label>
-    <input type="datetime-local" id="networkTime">
-    <button id="updateNetwork">Update Network</button>
+  <!-- Control Container: Mode selection and controls -->
+  <div id="control-container">
+    <div>
+      <label>
+        <input type="radio" name="mode" value="manual" checked> Manual Mode
+      </label>
+      <label>
+        <input type="radio" name="mode" value="playback"> Playback Mode
+      </label>
+    </div>
+    <!-- Manual Mode Controls -->
+    <div id="manualControls">
+      <label for="networkTime">Select Time:</label>
+      <input type="datetime-local" id="networkTime">
+    </div>
+    <!-- Playback Mode Controls -->
+    <div id="playbackControls" class="playback-only">
+      <div>
+        <label for="startTime">Start Time:</label>
+        <input type="datetime-local" id="startTime">
+      </div>
+      <div>
+        <label for="endTime">End Time:</label>
+        <input type="datetime-local" id="endTime">
+      </div>
+      <div>
+        <label for="steps">Steps:</label>
+        <input type="number" id="steps" min="1" value="10">
+      </div>
+      <div>
+        <label for="stepInterval">Time Between Steps (sec):</label>
+        <input type="number" id="stepInterval" min="1" value="1">
+      </div>
+      <div>
+        <button id="startPlayback">Start Playback</button>
+        <button id="stopPlayback">Stop Playback</button>
+      </div>
+    </div>
   </div>
 
   <svg id="network"></svg>
@@ -58,135 +101,175 @@
   <!-- Load D3.js from a CDN -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script>
-    // Sample data with additional properties for each user.
-    const nodes = [
-      { id: "1", name: "Alice", img: "https://randomuser.me/api/portraits/women/1.jpg", linkedin: "https://linkedin.com/in/alice", email: "alice@example.com" },
-      { id: "2", name: "Bob", img: "https://randomuser.me/api/portraits/men/2.jpg", linkedin: "https://linkedin.com/in/bob", email: "bob@example.com" },
-      { id: "3", name: "Carol", img: "https://randomuser.me/api/portraits/women/3.jpg", linkedin: "https://linkedin.com/in/carol", email: "carol@example.com" },
-      { id: "4", name: "Dave", img: "https://randomuser.me/api/portraits/men/4.jpg", linkedin: "https://linkedin.com/in/dave", email: "dave@example.com" },
-      { id: "5", name: "Eve", img: "https://randomuser.me/api/portraits/women/5.jpg", linkedin: "https://linkedin.com/in/eve", email: "eve@example.com" },
-      { id: "6", name: "Frank", img: "https://randomuser.me/api/portraits/men/6.jpg", linkedin: "https://linkedin.com/in/frank", email: "frank@example.com" },
-      { id: "7", name: "Grace", img: "https://randomuser.me/api/portraits/women/7.jpg", linkedin: "https://linkedin.com/in/grace", email: "grace@example.com" },
-      { id: "8", name: "Henry", img: "https://randomuser.me/api/portraits/men/8.jpg", linkedin: "https://linkedin.com/in/henry", email: "henry@example.com" },
-      { id: "9", name: "Ivy", img: "https://randomuser.me/api/portraits/women/9.jpg", linkedin: "https://linkedin.com/in/ivy", email: "ivy@example.com" },
-      { id: "10", name: "Jack", img: "https://randomuser.me/api/portraits/men/10.jpg", linkedin: "https://linkedin.com/in/jack", email: "jack@example.com" },
-      { id: "11", name: "Alex", img: "/images/alex.jpeg", linkedin: "https://linkedin.com/in/ivy", email: "ivy@example.com" },
-      { id: "12", name: "Matthew", img: "/images/matthew.jpeg", linkedin: "https://linkedin.com/in/ivy", email: "ivy@example.com" },
-      { id: "13", name: "Petr", img: "/images/petr.jpeg", linkedin: "https://linkedin.com/in/ivy", email: "ivy@example.com" },
-      { id: "14", name: "Quentin", img: "/images/quentin.jpeg", linkedin: "https://linkedin.com/in/ivy", email: "ivy@example.com" },
-      { id: "15", name: "Rahul", img: "/images/rahul.jpeg", linkedin: "https://linkedin.com/in/ivy", email: "ivy@example.com" }
-    ];
+    // Global variables for nodes and links.
+    let nodes = [];
+    let links = [];
 
-    const links = [
-      { source: "1", target: "2" },
-      { source: "1", target: "3" },
-      { source: "1", target: "4" },
-      { source: "2", target: "5" },
-      { source: "3", target: "6" },
-      { source: "4", target: "7" },
-      { source: "4", target: "8" },
-      { source: "5", target: "9" },
-      { source: "5", target: "10" },
-      // Additional connections:
-      { source: "3", target: "9" },
-      { source: "7", target: "10" },
-      //Personal connecitons
-      { source: "12", target: "7" },
-      { source: "13", target: "1" },
-      { source: "14", target: "10" },
+    // ------------------------------
+    // Fetch Data from Rust API and Preload Images
+    // ------------------------------
+    function fetchNetworkData(apiUrl) {
+      return fetch(apiUrl)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("Network response was not ok: " + response.statusText);
+          }
+          return response.json();
+        })
+        .then(data => {
+          // Your API returns an object with "edges" and "people".
+          // Convert edges to our links format:
+          // We'll use the field "ts" as the time.
+          links = data.edges.map(edge => ({
+            source: edge.from.toString(),
+            target: edge.to.toString(),
+            time: edge.ts  // already in ISO format (with a "Z" suffix)
+          }));
+          // Convert people to our nodes array.
+          // The API returns an array of [id, profile] pairs.
+          nodes = data.people.map(pair => {
+            const [id, profile] = pair;
+            return {
+              id: id.toString(),
+              name: profile.name,
+              // Use profile.pfp if available; otherwise, a default image URL.
+              img: profile.pfp !== "" ? profile.pfp : "https://via.placeholder.com/60",
+              linkedin: profile.linkedin,
+              email: profile.email
+            };
+          });
+          // Preload images for each node.
+          return Promise.all(nodes.map(node =>
+            fetch(node.img)
+              .then(resp => {
+                if (!resp.ok) {
+                  throw new Error("Image fetch failed for node " + node.id);
+                }
+                return resp.blob();
+              })
+              .then(blob => {
+                node.img = URL.createObjectURL(blob);
+                return node;
+              })
+              .catch(err => {
+                console.error("Error loading image for node", node.id, err);
+                // Fallback: leave node.img as is.
+                return node;
+              })
+          ));
+        });
+    }
 
-      { source: "11", target: "12" },
-      { source: "11", target: "13" },
-      { source: "11", target: "14" },
-      { source: "11", target: "15" },
-      { source: "12", target: "13" },
-      { source: "12", target: "14" },
-      { source: "12", target: "15" },
-      { source: "13", target: "14" },
-      { source: "13", target: "15" },
-      { source: "14", target: "15" }
-    ];
-
-    // Set up the SVG dimensions to fill the viewport
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-    const svg = d3.select("#network")
-      .attr("width", width)
-      .attr("height", height);
-
-    // Define a clipPath with the circle centered at (0,0)
-    svg.append("defs")
-      .append("clipPath")
-      .attr("id", "clip-circle")
-      .append("circle")
-      .attr("cx", 0)
-      .attr("cy", 0)
-      .attr("r", 30);
-
-    // Set up the force simulation with nodes and links
-    const simulation = d3.forceSimulation(nodes)
-      .force("link", d3.forceLink(links)
-        .id(d => d.id)
-        .distance(150)
-      )
-      .force("charge", d3.forceManyBody().strength(-300))
-      .force("center", d3.forceCenter(width / 2, height / 2));
-
-    // Draw the links (lines connecting nodes)
-    const link = svg.append("g")
-      .attr("stroke", "#aaa")
-      .attr("stroke-width", 2)
-      .selectAll("line")
-      .data(links)
-      .enter()
-      .append("line");
-
-    // Draw the nodes
-    const node = svg.selectAll(".node")
-      .data(nodes)
-      .enter()
-      .append("g")
-      .attr("class", "node")
-      .call(drag(simulation))
-      // Add a click event to redirect to the profile page
-      .on("click", (event, d) => {
-        window.location.href = `./profile.html?id=${d.id}`;
+    // Call the API – use your Rust API endpoint.
+    fetchNetworkData("http://127.0.0.1:8080/api/graphData")
+      .then(() => {
+        // Once data and images are loaded, initialize the simulation.
+        initSimulation();
+        // Set the default manual time input to the latest link time.
+        const latestEdgeTime = new Date(Math.max(...links.map(link => new Date(link.time))));
+        document.getElementById("networkTime").value = latestEdgeTime.toISOString().slice(0, 16);
+        // Set default playback values: start time is the time of the first edge, end time is the latest edge time.
+        document.getElementById("startTime").value = links[0].time;
+        document.getElementById("endTime").value = latestEdgeTime.toISOString().slice(0, 16);
+      })
+      .catch(err => {
+        console.error("Error fetching network data:", err);
       });
 
-    // Append a circle as a border/background for each node
-    node.append("circle")
-      .attr("r", 30)
-      .attr("fill", "white")
-      .attr("stroke", "#007BFF")
-      .attr("stroke-width", 3);
+    // ------------------------------
+    // Simulation and Visualization Setup
+    // ------------------------------
+    let simulation, linkGroup, linkSelection, nodeSelection;
 
-    // Append the profile images (centered and clipped to a circle)
-    node.append("image")
-      .attr("xlink:href", d => d.img)
-      .attr("x", -30)
-      .attr("y", -30)
-      .attr("width", 60)
-      .attr("height", 60)
-      .attr("clip-path", "url(#clip-circle)");
+    function initSimulation() {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      const svg = d3.select("#network")
+        .attr("width", width)
+        .attr("height", height);
 
-    // Add text labels (the user's name) under each node
-    node.append("text")
-      .attr("dy", 45)
-      .attr("text-anchor", "middle")
-      .text(d => d.name);
+      // Append container for pan/zoom
+      const container = svg.append("g");
 
-    // Update positions on each simulation tick
-    simulation.on("tick", () => {
-      link
-        .attr("x1", d => d.source.x)
-        .attr("y1", d => d.source.y)
-        .attr("x2", d => d.target.x)
-        .attr("y2", d => d.target.y);
+      // Define clipPath for circular images.
+      svg.append("defs")
+        .append("clipPath")
+        .attr("id", "clip-circle")
+        .append("circle")
+        .attr("cx", 0)
+        .attr("cy", 0)
+        .attr("r", 30);
 
-      node.attr("transform", d => `translate(${d.x},${d.y})`);
-    });
+      // Set up zoom/pan behavior.
+      const zoom = d3.zoom()
+        .scaleExtent([0.1, 10])
+        .on("zoom", (event) => {
+          container.attr("transform", event.transform);
+        });
+      svg.call(zoom);
 
-    // Drag functions to allow users to reposition nodes manually
+      // Initialize the force simulation.
+      simulation = d3.forceSimulation(nodes)
+        .force("link", d3.forceLink(links)
+          .id(d => d.id)
+          .distance(150))
+        .force("charge", d3.forceManyBody().strength(-300))
+        .force("center", d3.forceCenter(width / 2, height / 2));
+
+      // Create link group.
+      linkGroup = container.append("g")
+        .attr("stroke", "#aaa")
+        .attr("stroke-width", 2);
+      // Bind links initially.
+      linkSelection = linkGroup.selectAll("line")
+        .data(links)
+        .enter()
+        .append("line");
+
+      // Create node group.
+      nodeSelection = container.selectAll(".node")
+        .data(nodes)
+        .enter()
+        .append("g")
+        .attr("class", "node")
+        .call(drag(simulation))
+        .on("click", (event, d) => {
+          window.location.href = `./profile.html?id=${d.id}`;
+        });
+
+      // Append node circles.
+      nodeSelection.append("circle")
+        .attr("r", 30)
+        .attr("fill", "white")
+        .attr("stroke", "#007BFF")
+        .attr("stroke-width", 3);
+
+      // Append node images.
+      nodeSelection.append("image")
+        .attr("xlink:href", d => d.img)
+        .attr("x", -30)
+        .attr("y", -30)
+        .attr("width", 60)
+        .attr("height", 60)
+        .attr("clip-path", "url(#clip-circle)");
+
+      // Append node labels.
+      nodeSelection.append("text")
+        .attr("dy", 45)
+        .attr("text-anchor", "middle")
+        .text(d => d.name);
+
+      // Update simulation on each tick.
+      simulation.on("tick", () => {
+        linkGroup.selectAll("line")
+          .attr("x1", d => d.source.x)
+          .attr("y1", d => d.source.y)
+          .attr("x2", d => d.target.x)
+          .attr("y2", d => d.target.y);
+        nodeSelection.attr("transform", d => `translate(${d.x},${d.y})`);
+      });
+    }
+
     function drag(simulation) {
       function dragstarted(event, d) {
         if (!event.active) simulation.alphaTarget(0.3).restart();
@@ -208,48 +291,107 @@
         .on("end", dragended);
     }
 
-    // --- Time Input Functionality (new) ---
-    // Function to format the current datetime for a datetime-local input
-    function getCurrentDateTimeLocal() {
-      const now = new Date();
-      const pad = (num) => (num < 10 ? '0' + num : num);
-      const year = now.getFullYear();
-      const month = pad(now.getMonth() + 1);
-      const day = pad(now.getDate());
-      const hours = pad(now.getHours());
-      const minutes = pad(now.getMinutes());
-      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    // ------------------------------
+    // Time-Filtering Functionality
+    // ------------------------------
+    // This function filters the links based on the provided Date.
+    function updateNetworkForTime(simTime) {
+      console.log("Updating network for time:", simTime);
+      const filteredLinks = links.filter(link => new Date(link.time) <= simTime);
+      console.log("Filtered links:", filteredLinks);
+      simulation.force("link").links(filteredLinks);
+      const linkKey = d => `${(d.source.id || d.source)}-${(d.target.id || d.target)}`;
+      linkSelection = linkGroup.selectAll("line").data(filteredLinks, linkKey);
+      linkSelection.exit().remove();
+      linkSelection.enter().append("line")
+        .attr("stroke", "#aaa")
+        .attr("stroke-width", 2);
+      // Use a lower alpha target for smoother transitions.
+      simulation.alphaTarget(0.3).restart();
     }
-    // Set the default value of the time input to the current datetime
-    document.getElementById("networkTime").value = getCurrentDateTimeLocal();
 
-    // When the update button is clicked, send the selected time to the server
-    document.getElementById("updateNetwork").addEventListener("click", () => {
-      const selectedTime = document.getElementById("networkTime").value;
-      console.log("Selected time:", selectedTime);
-      // Example: Send the selected time to your server via a GET request.
-      // Replace the URL below with your actual API endpoint.
-      fetch(`/api/network?time=${encodeURIComponent(selectedTime)}`)
-        .then(response => {
-          if (!response.ok) {
-            throw new Error("Network response was not ok");
-          }
-          return response.json();
-        })
-        .then(data => {
-          console.log("Network data for selected time:", data);
-          // Here you could update the network visualization based on the returned data.
-          // For example:
-          // nodes = data.nodes;
-          // links = data.links;
-          // renderNetwork(nodes, links);
-          alert("Network updated for time: " + selectedTime);
-        })
-        .catch(error => {
-          console.error("Error updating network:", error);
-          alert("There was an error updating the network. Please try again.");
-        });
+    // ------------------------------
+    // Manual Mode: Listen for changes on the manual datetime-local input
+    // ------------------------------
+    const manualTimeInput = document.getElementById("networkTime");
+    manualTimeInput.addEventListener("input", () => {
+      const selectedTime = new Date(manualTimeInput.value);
+      console.log("Manual mode - selected time:", selectedTime);
+      updateNetworkForTime(selectedTime);
     });
+
+    // ------------------------------
+    // Playback Controls and Functionality
+    // ------------------------------
+    const startTimeInput = document.getElementById("startTime");
+    const endTimeInput = document.getElementById("endTime");
+    const stepsInput = document.getElementById("steps");
+    const stepIntervalInput = document.getElementById("stepInterval");
+    const startPlaybackBtn = document.getElementById("startPlayback");
+    const stopPlaybackBtn = document.getElementById("stopPlayback");
+
+    let playbackTimer = null;
+
+    startTimeInput.value = "2025-02-02T00:10:00";
+    endTimeInput.value = "2025-02-02T04:00:00";
+
+    startPlaybackBtn.addEventListener("click", () => {
+      if (playbackTimer) clearInterval(playbackTimer);
+
+      const startTime = new Date(startTimeInput.value);
+      const endTime = new Date(endTimeInput.value);
+      const steps = parseInt(stepsInput.value);
+      const stepIntervalMs = parseInt(stepIntervalInput.value) * 1000;
+      if (isNaN(startTime) || isNaN(endTime) || steps < 1 || isNaN(stepIntervalMs)) {
+        alert("Please provide valid time and step parameters.");
+        return;
+      }
+
+      const totalDuration = endTime - startTime;
+      const increment = steps > 1 ? totalDuration / (steps - 1) : 0;
+      let currentStep = 0;
+      updateNetworkForTime(startTime);
+
+      playbackTimer = setInterval(() => {
+        currentStep++;
+        if (currentStep >= steps) {
+          clearInterval(playbackTimer);
+          return;
+        }
+        const currentSimTime = new Date(startTime.getTime() + increment * currentStep);
+        updateNetworkForTime(currentSimTime);
+      }, stepIntervalMs);
+    });
+
+    stopPlaybackBtn.addEventListener("click", () => {
+      if (playbackTimer) {
+        clearInterval(playbackTimer);
+        playbackTimer = null;
+      }
+    });
+
+    // ------------------------------
+    // Mode Toggle: Manual vs Playback
+    // ------------------------------
+    const modeRadios = document.getElementsByName("mode");
+    const manualControlsDiv = document.getElementById("manualControls");
+    const playbackControlsDiv = document.getElementById("playbackControls");
+
+    function updateMode() {
+      const mode = Array.from(modeRadios).find(radio => radio.checked).value;
+      if (mode === "manual") {
+        manualControlsDiv.style.display = "block";
+        playbackControlsDiv.style.display = "none";
+      } else {
+        manualControlsDiv.style.display = "none";
+        playbackControlsDiv.style.display = "block";
+      }
+    }
+
+    Array.from(modeRadios).forEach(radio => {
+      radio.addEventListener("change", updateMode);
+    });
+    updateMode();
   </script>
 </body>
 </html>
