@@ -9,4 +9,5 @@ actix-web = "4"
 askama = "0.12.1"
 askama_actix = "0.14.0"
 serde = { version = "1.0.217", features = ["derive"] }
-
+chrono = { version = "0.4.39", features = ["serde"] }
+env_logger = "0.10.0"

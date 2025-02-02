@@ -1,4 +1,5 @@
-use actix_web::{get,  post, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{cookie::time::Date, get, post, web, App, HttpResponse, HttpServer, Responder};
+use chrono::{DateTime, Local, Utc};
 use std::sync::RwLock;
 use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
@@ -14,16 +15,63 @@ pub struct Profile {
 
 #[derive(Default)]
 pub struct ApiState {
-    pub last: String,
-    pub graph: HashMap<u64, HashMap<u64, u64>>,
+    pub graph: HashMap<u64, HashMap<u64, DateTime<Local>>>,
     pub people: HashMap<u64, Profile>,
 }
+
+impl ApiState{
+    pub fn fakedata() -> Self{
+        let mut state = ApiState{
+            graph: HashMap::new(),
+            people: HashMap::new(),
+        };
+
+        let p0: Profile = Profile {name: "Person 0".to_owned(), pfp: "".to_owned(), linkedin:"".to_owned(), email: "".to_owned()};
+        let p1: Profile = Profile {name: "Person 1".to_owned(), pfp: "".to_owned(), linkedin:"".to_owned(), email: "".to_owned()};
+        let p2: Profile = Profile {name: "Person 2".to_owned(), pfp: "".to_owned(), linkedin:"".to_owned(), email: "".to_owned()};
+        let p3: Profile = Profile {name: "Person 3".to_owned(), pfp: "".to_owned(), linkedin:"".to_owned(), email: "".to_owned()};
+        let p4: Profile = Profile {name: "Person 4".to_owned(), pfp: "".to_owned(), linkedin:"".to_owned(), email: "".to_owned()};
+
+        state.people.insert(0, p0);
+        state.people.insert(1, p1);
+        state.people.insert(2, p2);
+        state.people.insert(3, p3);
+        state.people.insert(4, p4);
+
+        // p0scans
+        let mut p0scans = HashMap::new();
+        
+        state.graph.insert(0 as u64, p0scans);
+        
+        // p0scans
+        let mut p1scans = HashMap::new();
+        p1scans.insert(3 as u64, Local::now());
+        p1scans.insert(2 as u64, Local::now());
+        state.graph.insert(1 as u64, p1scans);
+
+        // p0scans
+        let mut p2scans = HashMap::new();
+        state.graph.insert(2 as u64, p2scans);
+
+        // p0scans
+        let mut p3scans = HashMap::new();
+        state.graph.insert(3 as u64, p3scans);
+
+        // p0scans
+        let mut p4scans = HashMap::new();
+        state.graph.insert(4 as u64, p4scans);
+        
+        state
+    }
+}
+
+
 
 #[derive(Serialize)]
 struct edge {
     from: u64,
     to: u64,
-    ts: u64,
+    ts: DateTime<Local>,
 }
 
 #[derive(Serialize)]
@@ -33,7 +81,7 @@ struct GraphDataPacket {
 }
 
 impl ApiState {
-    pub fn addEdge(&mut self, my: &u64, conns: Vec<(u64, u64)>) {
+    pub fn addEdge(&mut self, my: &u64, conns: Vec<(u64, DateTime<Local>)>) {
         for (id, ts) in &conns{
             let lwr = if id < my {id} else {my};
             let hgr = if id < id {my} else {my};
@@ -108,11 +156,11 @@ async fn upload_edges(form: web::Form<RegistrationData>, state: web::Data<RwLock
 
 
     let mut s = state.write().unwrap();
-    println!("skill issue {} {:p}", s.last, &s);
+    // println!("skill issue {} {:p}", s.last, &s);
 
 
     // s.last = body;
-    println!("skill issue {}", s.last);
+    // println!("skill issue {}", s.last);
     HttpResponse::Ok().body("Hello world!")
 }
 
