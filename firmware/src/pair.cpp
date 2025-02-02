@@ -16,10 +16,10 @@
 
 
 uint8_t scans[512];
-uint32_t times[512];
+uint64_t times[512];
 uint8_t idx = 0;
 
-static int code = 42; // 0-255
+int code = 42; // 0-255
 
 // 00 10 10 10
 // 0  2  2  2
@@ -114,11 +114,14 @@ void render_pair(uint32_t *fb, uint32_t *bit_streams)
     // }
 
     uint8_t out = arrows[3] + (arrows[2]<<2) + (arrows[1]<<4) + (arrows[0]<<6);
-    printf("%d id entered!\n", out);
+    // printf("%d id entered!\n", out);
 
     if (out % 4 == arrows[4]){
         screendisp(fb, bit_streams, "SAVE");
-        scans[idx++] = out;
+        scans[idx] = out;
+        times[idx] = time_us_64();
+        idx += 1;
+
     } else{
         screendisp(fb, bit_streams, "FAIL" );
     }

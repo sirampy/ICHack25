@@ -1,0 +1,51 @@
+
+{% extends "base.html" %}
+
+{% block title %}Reader{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+
+<button id="button">Connect</button>
+
+<script>
+
+let button = document.getElementById("button")
+button.addEventListener("click", () => {
+    const usbVendorId = 0x2e8a;
+    navigator.serial
+      .requestPort({ filters: [{ usbVendorId }] })
+      .then((port) => {
+
+          reader.write("R")
+        while (port.readable) {
+            console.log("reada le")
+            const reader = port.readable.getReader();
+                while (true) {
+                    const { value, done } = reader.read();
+                    if (done) {
+                        // |reader| has been canceled.
+                        break;
+                    }
+                // Do something with |value|...
+                }
+                reader.releaseLock();
+            
+            }
+
+
+        // Connect to `port` or add it to the list of available ports.
+      })
+      .catch((e) => {
+        // The user didn't select a port.
+      });
+    });
+
+
+
+
+  </script>
+
+{% endblock %}

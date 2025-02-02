@@ -17,8 +17,9 @@
 extern void screendisp(uint32_t *const fb, uint32_t bit_streams[10], const char* str);
 
 extern uint8_t scans[512];
-extern uint8_t times[512];
+extern uint64_t times[512];
 extern uint8_t idx;
-
+extern int code
+;
 
 void enter_pair(uint32_t *const fb, uint32_t *bit_streams);
