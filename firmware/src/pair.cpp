@@ -19,7 +19,7 @@ uint8_t scans[512];
 uint64_t times[512];
 uint8_t idx = 0;
 
-int code = 31; // 0-255
+int code = 111; // 0-255
 
 
 // Quotes

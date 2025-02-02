@@ -234,7 +234,7 @@
         .attr("class", "node")
         .call(drag(simulation))
         .on("click", (event, d) => {
-          window.location.href = `./profile.html?id=${d.id}`;
+          window.location.href = `./profile?id=${d.id}`;
         });
 
       // Append node circles.

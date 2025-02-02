@@ -23,6 +23,24 @@ async fn index_get(req: HttpRequest) -> impl Responder {
 
 
 #[derive(Template)]
+#[template(path = "network.html")]
+struct NetworkTemplate {}
+
+async fn network_get() -> impl Responder {
+    NetworkTemplate {}
+}
+
+
+#[derive(Template)]
+#[template(path = "profile.html")]
+struct ProfileTemplate {}
+
+async fn profile_get() -> impl Responder {
+    ProfileTemplate {}
+}
+
+
+#[derive(Template)]
 #[template(path = "register.html")]
 struct RegisterTemplate {}
 
@@ -35,7 +53,7 @@ async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "debug");
     env_logger::init();
 
-    let data = web::Data::new(RwLock::new(api::ApiState::fakedata()));
+    let data = web::Data::new(RwLock::new(api::ApiState::default()));
 
     HttpServer::new(move || {
         App::new()
@@ -58,6 +76,8 @@ async fn main() -> std::io::Result<()> {
             .service(echo)
             .route("/", web::get().to(index_get))
             .route("/register", web::get().to(register_get))
+            .route("/network", web::get().to(network_get))
+            .route("/profile", web::get().to(profile_get))
             .service(fs::Files::new("/static", "static/").show_files_listing())
     })
     .bind(("127.0.0.1", 8080))?
